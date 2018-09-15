@@ -19,7 +19,6 @@ rSpeed = 0
 currentTime = 0
 lRevolutions = 0
 rRevolutions = 0
-startTime = time.time()
 
 #Function that resets the total count of ticks
 def resetCounts():
@@ -41,29 +40,15 @@ def getSpeeds():
 	
 # This function is called when the left encoder detects a rising edge signal.
 def onLeftEncode(pin):
-    global lTickCount, lRevolutions, lSpeed, currentTime
+    global lTickCount
     print("Left encoder ticked!")
     lTickCount = lTickCount + 1
-    lRevolutions = float(lTickCount / 32)
-    currentTime = time.time() - startTime
-    lSpeed = lRevolutions / currentTime
-    print ("LTicks ", lTickCount)
-    print ("LRevolutions ", lRevolutions)
-    print ("LTime ", currentTime)
-    print ("LSpeed ", lSpeed)
 
 # This function is called when the right encoder detects a rising edge signal.
 def onRightEncode(pin):
-    global rTickCount, rRevolutions, rSpeed, currentTime
+    global rTickCount
     print("Right encoder ticked!")
     rTickCount = rTickCount + 1
-    rRevolutious = float(rTickCount / 32)
-    currentTime = time.time() - startTime
-    rSpeed = rRevolutions / currentTime
-    print ("RTicks ", rTickCount)
-    print ("RRevolutions ", rRevolutions)
-    print ("RTime ", currentTime)
-    print ("RSpeed ", rSpeed)
 	
 # This function is called when Ctrl+C is pressed.
 # It's intended for properly exiting the program.
@@ -97,4 +82,3 @@ while True:
 	#if function.lower() == "r":
         #resetCounts()ss
 		#getCounts()	
-    
