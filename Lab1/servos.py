@@ -39,19 +39,21 @@ pwm.set_pwm_freq(50)
 pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
 pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
 
+time.sleep(5)
+
 while True:
     # Write a maximum value of 1.7 for each servo.
     # Since the servos are oriented in opposite directions,
     # the robot will end up spinning in one direction.
     # Values between 1.3 and 1.7 should be used.
-    pwm.set_pwm(LSERVO, 0, math.floor(1.4 / 20 * 4096));
-    pwm.set_pwm(RSERVO, 0, math.floor(1.6 / 20 * 4096));
+    pwm.set_pwm(LSERVO, 0, math.floor(1.3 / 20 * 4096));
+    pwm.set_pwm(RSERVO, 0, math.floor(1.7 / 20 * 4096));
     time.sleep(0.5)
     
     # Write a minimum value of 1.4 for each servo.
     # The robot will end up spinning in the other direction.
-    pwm.set_pwm(LSERVO, 0, math.floor(1.4 / 20 * 4096));
-    pwm.set_pwm(RSERVO, 0, math.floor(1.6 / 20 * 4096));
+    pwm.set_pwm(LSERVO, 0, math.floor(1.3 / 20 * 4096));
+    pwm.set_pwm(RSERVO, 0, math.floor(1.7 / 20 * 4096));
     time.sleep(0.5)
     
     

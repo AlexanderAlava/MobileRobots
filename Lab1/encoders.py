@@ -57,7 +57,7 @@ def onRightEncode(pin):
     global rTickCount, rRevolutions, rSpeed, currentTime
     print("Right encoder ticked!")
     rTickCount = rTickCount + 1
-    rRevolutious = float(rTickCount / 32)
+    rRevolutions = float(rTickCount / 32)
     currentTime = time.time() - startTime
     rSpeed = rRevolutions / currentTime
     print ("RTicks ", rTickCount)
