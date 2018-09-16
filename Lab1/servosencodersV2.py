@@ -116,6 +116,7 @@ def ctrlC(signum, frame):
 ## Attach the Ctrl+C signal interrupt
 signal.signal(signal.SIGINT, ctrlC)	
 initEncoders()
+time.sleep(5)
 
 possibleInputs = (1.30,1.31, 1.32, 1.33, 1.34, 1.35, 1.36, 1.37, 1.38, 1.39,
 1.40, 1.41, 1.42, 1.43, 1.44, 1.45, 1.46, 1.47, 1.48, 1.49,
@@ -123,22 +124,23 @@ possibleInputs = (1.30,1.31, 1.32, 1.33, 1.34, 1.35, 1.36, 1.37, 1.38, 1.39,
 1.60, 1.61, 1.62, 1.63, 1.64, 1.65, 1.66, 1.67, 1.68, 1.69,
 1.70)
 
-testVar = 1.7
+testVar = 1.6
 
 while True:
     # Write a maximum value of 1.7 for each servo.
     # Since the servos are oriented in opposite directions,
     # the robot will end up spinning in one direction.
     # Values between 1.3 and 1.7 should be used.
-    pwm.set_pwm(LSERVO, 0, math.floor(0.00 / 20 * 4096))
+    pwm.set_pwm(LSERVO, 0, math.floor(testVar / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(testVar) / 20 * 4096))
     
     # Write a minimum value of 1.4 for each servo.
     # The robot will end up spinning in the other direction.
-    pwm.set_pwm(LSERVO, 0, math.floor(0.00 / 20 * 4096))
+    pwm.set_pwm(LSERVO, 0, math.floor(testVar / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(testVar) / 20 * 4096))
-    time.sleep(1)
-    while True:
-        time.sleep(0.03)
-        print (currentTime,rSpeed)
+    time.sleep(10)
+    print (testVar,getSpeeds())
+    time.sleep(5)
+    testVar = testVar + 0.01
+    resetCounts()
     

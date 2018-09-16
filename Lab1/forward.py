@@ -124,21 +124,38 @@ possibleInputs = (1.30,1.31, 1.32, 1.33, 1.34, 1.35, 1.36, 1.37, 1.38, 1.39,
 1.70)
 
 testVar = 1.7
+distanceTravel = 0
+xInches = input("Enter number of inches to travel: ")
+yTime = input("Enter time to complete set distance: ")
+goodValue = False
+maxValue = 7.134
+while goodValue != True:
+    if (float(xInches) / float(yTime)) > maxValue:
+        print("Sorry but that request can not be completed. Please try again")
+        xInches = input("Enter number of inches to travel: ")
+        yTime = input("Enter time to complete set distance: ")
+    else:
+	    goodValue = True
 
 while True:
     # Write a maximum value of 1.7 for each servo.
     # Since the servos are oriented in opposite directions,
     # the robot will end up spinning in one direction.
     # Values between 1.3 and 1.7 should be used.
-    pwm.set_pwm(LSERVO, 0, math.floor(0.00 / 20 * 4096))
+    pwm.set_pwm(LSERVO, 0, math.floor(1.7 / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(testVar) / 20 * 4096))
     
     # Write a minimum value of 1.4 for each servo.
     # The robot will end up spinning in the other direction.
-    pwm.set_pwm(LSERVO, 0, math.floor(0.00 / 20 * 4096))
+    pwm.set_pwm(LSERVO, 0, math.floor(1.7 / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(testVar) / 20 * 4096))
-    time.sleep(1)
-    while True:
-        time.sleep(0.03)
-        print (currentTime,rSpeed)
-    
+    distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
+    if (float(xInches) - float(distanceTravel)) <= 0.00:
+	    # Write an initial value of 1.5, which keeps the servos stopped.
+        # Due to how servos work, and the design of the Adafruit library, 
+        # the value must be divided by 20 and multiplied by 4096.
+        pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
+        pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
+        exit()
+    print("Number of Revolutions: ",(lRevolutions + rRevolutions) / 2)
+    print("Distance Traveled: ", distanceTravel)
