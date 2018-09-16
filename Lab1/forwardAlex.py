@@ -201,17 +201,16 @@ while goodValue != True:
 while True:
 
     setSpeedsIPS(float(xInches) / float(yTime), float(xInches) / float(yTime))
-    time.sleep(20)
 
 #    pwm.set_pwm(LSERVO, 0, math.floor(1.7 / 20 * 4096))
 #    pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(testVar) / 20 * 4096))
-#    distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
-#    if (float(xInches) - float(distanceTravel)) <= 0.00:
+    distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
+    if (float(xInches) - float(distanceTravel)) <= 0.00:
 	    # Write an initial value of 1.5, which keeps the servos stopped.
         # Due to how servos work, and the design of the Adafruit library,
         # the value must be divided by 20 and multiplied by 4096.
-#        pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
-#        pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
-#        exit()
-#    print("Number of Revolutions: ",(lRevolutions + rRevolutions) / 2)
-#    print("Distance Traveled: ", distanceTravel)
+        pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
+        pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
+        exit()
+    print("Number of Revolutions: ",(lRevolutions + rRevolutions) / 2)
+    print("Distance Traveled: ", distanceTravel)
