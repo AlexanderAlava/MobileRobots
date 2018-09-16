@@ -160,13 +160,17 @@ def calibrateSpeeds():
     return 0
 
 def setSpeedsRPS(rpsLeft, rpsRight):
-    lPwmValue = float(lPwmTranslation(rpsLeft))
-    rPwmValue = float(rPwmTranslation(rpsRight))
+    lPwmValue = float(lPwmTranslation[rpsLeft])
+    rPwmValue = float(rPwmTranslation[rpsRight])
     pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
     return 0
 
 def setSpeedsIPS(ipsLeft, ipsRight):
+    rpsLeft = (8.20 * ipsLeft)
+    rpsRight = (8.20 * ipsRight)
+    lPwmValue = float(lPwmTranslation[rpsLeft])
+    rPwmValue = float(rPwmTranslation[rpsRight])
     return 0
 
 def setSpeedsvw(v, w):
