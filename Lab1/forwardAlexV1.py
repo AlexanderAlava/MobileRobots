@@ -3,6 +3,7 @@ import Adafruit_PCA9685
 import RPi.GPIO as GPIO
 import signal
 import math
+import decimal
 
 # The servo hat uses its own numbering scheme within the Adafruit library.
 # 0 represents the first servo, 1 for the second, and so on.
@@ -167,10 +168,12 @@ def setSpeedsRPS(rpsLeft, rpsRight):
     return 0
 
 def setSpeedsIPS(ipsLeft, ipsRight):
-    rpsLeft = (8.20 * ipsLeft)
-    rpsRight = (8.20 * ipsRight)
+    rpsLeft = float(math.ceil((ipsLeft / 8.20) * 100) / 100)
+    rpsRight = float(math.ceil((ipsRight / 8.20) * 100) / 100)
     lPwmValue = float(lPwmTranslation[rpsLeft])
     rPwmValue = float(rPwmTranslation[rpsRight])
+    pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
     return 0
 
 def setSpeedsvw(v, w):
@@ -197,24 +200,17 @@ while goodValue != True:
 
 while True:
 
-    setSpeedsRPS(0, 0)
-    time.sleep(5)
-
-    setSpeedsRPS(0.7, 0)
-    time.sleep(10)
-
-    setSpeedsRPS(0, 0.7)
-    time.sleep(10)
+    setSpeedsIPS(float(xInches) / float(yTime), float(xInches) / float(yTime))
 
 #    pwm.set_pwm(LSERVO, 0, math.floor(1.7 / 20 * 4096))
 #    pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(testVar) / 20 * 4096))
-#    distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
-#    if (float(xInches) - float(distanceTravel)) <= 0.00:
+    distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
+    if (float(xInches) - float(distanceTravel)) <= 0.00:
 	    # Write an initial value of 1.5, which keeps the servos stopped.
         # Due to how servos work, and the design of the Adafruit library,
         # the value must be divided by 20 and multiplied by 4096.
-#        pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
-#        pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
-#        exit()
-#    print("Number of Revolutions: ",(lRevolutions + rRevolutions) / 2)
-#    print("Distance Traveled: ", distanceTravel)
+        pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
+        pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
+        exit()
+    print("Number of Revolutions: ",(lRevolutions + rRevolutions) / 2)
+    print("Distance Traveled: ", distanceTravel)

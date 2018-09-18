@@ -113,6 +113,10 @@ def ctrlC(signum, frame):
     time.sleep(3)
     exit()
 
+def calculatePWM(revPerSec):
+    
+    return pwm 	
+
 ## Attach the Ctrl+C signal interrupt
 signal.signal(signal.SIGINT, ctrlC)	
 initEncoders()
@@ -129,6 +133,9 @@ xInches = input("Enter number of inches to travel: ")
 yTime = input("Enter time to complete set distance: ")
 goodValue = False
 maxValue = 7.134
+revValue = (float(xInches) / float(yTime) / 8.20)
+pwm = calculatePWM(revValue)
+ 
 while goodValue != True:
     if (float(xInches) / float(yTime)) > maxValue:
         print("Sorry but that request can not be completed. Please try again")
