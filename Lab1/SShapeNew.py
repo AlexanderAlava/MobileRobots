@@ -82,8 +82,6 @@ rPwmTranslation = {
 #Function that resets the total count of ticks
 def resetCounts():
     global totalCountTuple, lTickCount, rTickCount, startTime
-    #totalCountTuple[0] = totalCountTuple[0] + lTickCount
-    #totalCountTuple[1] = totalCountTuple[1] + rTickCount
     lTickCount = 0
     rTickCount = 0
     startTime = time.time()
@@ -108,10 +106,6 @@ def onLeftEncode(pin):
     lRevolutions = float(lTickCount / 32)
     currentTime = time.time() - startTime
     lSpeed = lRevolutions / currentTime
-    #print ("LTicks ", lTickCount)
-    #print ("LRevolutions ", lRevolutions)
-    #print ("LTime ", currentTime)
-    #print ("LSpeed ", lSpeed)
 
 # This function is called when the right encoder detects a rising edge signal.
 def onRightEncode(pin):
@@ -121,10 +115,6 @@ def onRightEncode(pin):
     rRevolutions = float(rTickCount / 32)
     currentTime = time.time() - startTime
     rSpeed = rRevolutions / currentTime
-    #print ("RTicks ", rTickCount)
-    #print ("RRevolutions ", rRevolutions)
-    #print ("RTime ", currentTime)
-    #print ("RSpeed ", rSpeed)
 
 def servoFlip(speed):
 	difference = speed - 1.5
@@ -157,9 +147,26 @@ def ctrlC(signum, frame):
     exit()
 
 def calibrateSpeeds():
-    #Use code that we developed to create the plot
-    return 0
+    startVar = 1.5
 
+    # Looping until it reaches the maximum required value
+    while startVar < 1.71:
+        # Setting values for both servos
+        pwm.set_pwm(LSERVO, 0, math.floor(startVar / 20 * 4096))
+        pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(startVar) / 20 * 4096))
+        time.sleep(10)
+
+        # Printing speeds to produce respective dictionaries
+        print (startVar,getSpeeds())
+        time.sleep(5)
+
+        # Increasing pwm value
+        startVar = startVar + 0.005
+
+        # Resetting start time and tick counts
+        resetCounts()
+
+# Defining the function that sets speed to revolutions per second
 def setSpeedsRPS(rpsLeft, rpsRight):
     lPwmValue = float(lPwmTranslation[rpsLeft])
     rPwmValue = float(rPwmTranslation[rpsRight])
@@ -167,6 +174,7 @@ def setSpeedsRPS(rpsLeft, rpsRight):
     pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
     return 0
 
+# Defining the function that sets speed to inches per second
 def setSpeedsIPS(ipsLeft, ipsRight):
     rpsLeft = float(math.ceil((ipsLeft / 8.20) * 100) / 100)
     rpsRight = float(math.ceil((ipsRight / 8.20) * 100) / 100)
@@ -176,18 +184,21 @@ def setSpeedsIPS(ipsLeft, ipsRight):
     pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
     return 0
 
+# Defining the speed function for the first arc
 def setSpeedsvw1(v, w):
     leftSpeed1 = (v + (w*daxis))
     rightSpeed1 = (v - (w*daxis))
     print(leftSpeed1, rightSpeed1)
     setSpeedsIPS(leftSpeed1, rightSpeed1)
-    
+
+# Defining the speed function for the second arc
 def setSpeedsvw2(v, w):
     leftSpeed2 = (v - (w*daxis))
     rightSpeed2 = (v + (w*daxis))
     print(leftSpeed2, rightSpeed2)
     setSpeedsIPS(leftSpeed2, rightSpeed2)
 
+# Prompting for and reading in user input
 circleRadius1 = 0
 circleRadius2 = 0
 circleTime = 0
@@ -195,16 +206,7 @@ circleRadius1 = input("Enter radius R for circle 1: ")
 circleRadius2 = input("Enter radius R for circle 2: ")
 circleTime = input("Enter time to complete circles: ")
 
-#wheelCircumference = 8.19956
-#daxis = 3.95
-#daxis_divide = 1.975
-#linearVelocity1 = wheelCircumference/float(circleTime)
-#velocityR_plus_velocityL = 2 * linearVelocity1
-#velocityL_minus_velocityR = (daxis * velocityR_plus_velocityL)/float(circleRadius1)
-#velocityL = linearVelocity1 + velocityL_minus_velocityR
-#velocityR = linearVelocity1 - velocityL_minus_velocityR
-#omega = linearVelocity1/float(circleRadius1)
-
+# Computing required values
 daxis = float(3.95)
 arcPath1 = float(3.14)*(float(circleRadius1))
 arcPath2 = float(3.14)*(float(circleRadius2))
@@ -212,48 +214,32 @@ linearSpeed = (float(arcPath1) + float(arcPath2))/float(circleTime)
 omega1 = float(linearSpeed)/float(circleRadius1)
 omega2 = float(linearSpeed)/float(circleRadius2)
 
-
-
-#leftSpeed1 = float(omega1)*(float(circleRadius1) + float(daxis))
-#rightSpeed1 = float(omega1)*(float(circleRadius1) - float(daxis))
-#leftSpeed2 = float(omega2)*(float(circleRadius2) - float(daxis))
-#rightSpeed2 = float(omega2)*(float(circleRadius2) - float(daxis))
-
-#print("Center Linear Velocity: ", centerVelocity1)
-#print("VR + VL: ", velocityR_plus_velocityL)
-#print("VL - VR: ", velocityL_minus_velocityR)
-#print("VL: ", velocityL)
-#print("VR: ", velocityR)
-#print("Omega: ", omega)
 while True:
-    #setSpeedsIPS(float(xInches) / float(yTime), float(xInches) / float(yTime))
-    #setSpeedsvw1(linearSpeed, omega1)
-    setSpeedsIPS(2.19, 0.92)
+    # Setting speed for first arc
+    setSpeedsvw1(linearSpeed, omega1)
     distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
-    print(lRevolutions, rRevolutions)
-    print(arcPath1, distanceTravel)
-    
+
+    # Checking if the distance of the first arch has been traveled
     if (float(arcPath1) - float(distanceTravel)) <= 0.00:
 	    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
 	    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
 	    exit()
 
+resetCounts()
+distanceTravel = 0
+newInput = ''
 
-
-newInput = input("Please enter \'c\' to continue the movement: ")
-
-#resetCounts()
-
+# Waiting for user input to proceed
 while newInput != 'm':
 	newInput = input("Please enter \'m\' to continue the movement: ")
-	
+
 while True:
-    #setSpeedsvw2(linearSpeed, omega2)
-    setSpeedsIPS(0.92, 2.19)
+    # Setting speed for second arc
+    setSpeedsvw2(linearSpeed, omega2)
     distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
-    
+
+    # Checking if the distance of the fi arch has been traveled
     if (float(arcPath2) - float(distanceTravel)) <= 0.00:
 	    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
 	    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
 	    exit()
-	
