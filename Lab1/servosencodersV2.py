@@ -136,7 +136,7 @@ while testVar <= 1.70:
     pwm.set_pwm(LSERVO, 0, math.floor(testVar / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(testVar) / 20 * 4096))
     print (testVar,getSpeeds())
-    time.sleep(3)
+    time.sleep(10)
     test = getSpeeds()
     left = test[0]
     right = test[1]
@@ -145,5 +145,5 @@ while testVar <= 1.70:
     testVar = testVar + 0.005
     resetCounts()
 
-print testLeft
-print testRight
+print (testLeft)
+print (testRight)
