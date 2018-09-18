@@ -236,6 +236,11 @@ while goodValue != True:
     else:
 	    goodValue = True
 
+input = ''
+
+while input != 's':
+    input = input("Please enter \'s\' to have the robot start it's movement: ")
+
 while True:
     setSpeedsIPS(ipsValue, ipsValue)
 
