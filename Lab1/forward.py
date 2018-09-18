@@ -228,7 +228,7 @@ while goodValue != True:
         xInches = input("Enter number of inches to travel: ")
         yTime = input("Enter time to complete set distance: ")
         ipsValue = (float(xInches) / float(yTime))
-    else if ipsValue < 0:
+    elif ipsValue < 0:
         print("Sorry but I am only supposed to move forwards, not backwards. Please try again")
         xInches = input("Enter number of inches to travel: ")
         yTime = input("Enter time to complete set distance: ")
