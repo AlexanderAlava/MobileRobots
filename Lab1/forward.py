@@ -233,18 +233,13 @@ while goodValue != True:
         xInches = input("Enter number of inches to travel: ")
         yTime = input("Enter time to complete set distance: ")
         ipsValue = (float(xInches) / float(yTime))
-    elif yTime < 0:
-        print("Time can not be negative. Please try again")
-        xInches = input("Enter number of inches to travel: ")
-        yTime = input("Enter time to complete set distance: ")
-        ipsValue = (float(xInches) / float(yTime))
     else:
 	    goodValue = True
 
-input = ''
+newInput = ''
 
-while input != 's':
-    input = input("Please enter \'s\' to have the robot start it's movement: ")
+while newInput != 's':
+    newInput = input("Please enter \'s\' to have the robot start it's movement: ")
 
 while True:
     setSpeedsIPS(ipsValue, ipsValue)

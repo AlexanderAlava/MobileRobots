@@ -176,23 +176,17 @@ def setSpeedsIPS(ipsLeft, ipsRight):
     pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
     return 0
 
-## Attach the Ctrl+C signal interrupt
-signal.signal(signal.SIGINT, ctrlC)
-initEncoders()
-
-#testVar = 1.7
-#distanceTravel = 0
-#xInches = input("Enter number of inches to travel: ")
-#yTime = input("Enter time to complete set distance: ")
-#goodValue = False
-#maxValue = 7.134
-#while goodValue != True:
-    #if (float(xInches) / float(yTime)) > maxValue:
-        #print("Sorry but that request can not be completed. Please try again")
-        #xInches = input("Enter number of inches to travel: ")
-        #yTime = input("Enter time to complete set distance: ")
-    #else:
-	    #goodValue = True
+def setSpeedsvw1(v, w):
+    leftSpeed1 = (v + (w*daxis))
+    rightSpeed1 = (v - (w*daxis))
+    print(leftSpeed1, rightSpeed1)
+    setSpeedsIPS(leftSpeed1, rightSpeed1)
+    
+def setSpeedsvw2(v, w):
+    leftSpeed2 = (v - (w*daxis))
+    rightSpeed2 = (v + (w*daxis))
+    print(leftSpeed2, rightSpeed2)
+    setSpeedsIPS(leftSpeed2, rightSpeed2)
 
 circleRadius1 = 0
 circleRadius2 = 0
@@ -201,15 +195,29 @@ circleRadius1 = input("Enter radius R for circle 1: ")
 circleRadius2 = input("Enter radius R for circle 2: ")
 circleTime = input("Enter time to complete circles: ")
 
-wheelCircumference = 8.19956
-daxis = 3.95
-daxis_divide = 1.975
-linearVelocity1 = wheelCircumference/float(circleTime)
-velocityR_plus_velocityL = 2 * linearVelocity1
-velocityL_minus_velocityR = (daxis * velocityR_plus_velocityL)/float(circleRadius1)
-velocityL = linearVelocity1 + velocityL_minus_velocityR
-velocityR = linearVelocity1 - velocityL_minus_velocityR
-omega = linearVelocity1/float(circleRadius1)
+#wheelCircumference = 8.19956
+#daxis = 3.95
+#daxis_divide = 1.975
+#linearVelocity1 = wheelCircumference/float(circleTime)
+#velocityR_plus_velocityL = 2 * linearVelocity1
+#velocityL_minus_velocityR = (daxis * velocityR_plus_velocityL)/float(circleRadius1)
+#velocityL = linearVelocity1 + velocityL_minus_velocityR
+#velocityR = linearVelocity1 - velocityL_minus_velocityR
+#omega = linearVelocity1/float(circleRadius1)
+
+daxis = float(3.95)
+arcPath1 = float(3.14)*(float(circleRadius1))
+arcPath2 = float(3.14)*(float(circleRadius2))
+linearSpeed = (float(arcPath1) + float(arcPath2))/float(circleTime)
+omega1 = float(linearSpeed)/float(circleRadius1)
+omega2 = float(linearSpeed)/float(circleRadius2)
+
+
+
+#leftSpeed1 = float(omega1)*(float(circleRadius1) + float(daxis))
+#rightSpeed1 = float(omega1)*(float(circleRadius1) - float(daxis))
+#leftSpeed2 = float(omega2)*(float(circleRadius2) - float(daxis))
+#rightSpeed2 = float(omega2)*(float(circleRadius2) - float(daxis))
 
 #print("Center Linear Velocity: ", centerVelocity1)
 #print("VR + VL: ", velocityR_plus_velocityL)
@@ -217,46 +225,35 @@ omega = linearVelocity1/float(circleRadius1)
 #print("VL: ", velocityL)
 #print("VR: ", velocityR)
 #print("Omega: ", omega)
-
-flag = True;
-
-while flag == True:
+while True:
     #setSpeedsIPS(float(xInches) / float(yTime), float(xInches) / float(yTime))
+    #setSpeedsvw1(linearSpeed, omega1)
     setSpeedsIPS(2.19, 0.92)
     distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
-    print (distanceTravel)
+    print(lRevolutions, rRevolutions)
+    print(arcPath1, distanceTravel)
     
-    if (float(15.71) - float(distanceTravel)) <= 0.00:
+    if (float(arcPath1) - float(distanceTravel)) <= 0.00:
 	    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
 	    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
-	    flag = False
-	    
-resetCounts()
+	    exit()
+
+
+
+newInput = input("Please enter \'c\' to continue the movement: ")
+
+#resetCounts()
+
+while newInput != 'm':
+	newInput = input("Please enter \'m\' to continue the movement: ")
 	
 while True:
+    #setSpeedsvw2(linearSpeed, omega2)
     setSpeedsIPS(0.92, 2.19)
     distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
-    print (distanceTravel)
-	    
-	#    if flag == True:
-	#	    setSpeedsIPS(0.92, 2.19)
-	#	    distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
-	#	    print (distanceTravel)
-		    
-    if (float(15.71) - float(distanceTravel)) <= 0.00:
+    
+    if (float(arcPath2) - float(distanceTravel)) <= 0.00:
 	    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
 	    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
-	    exit()	    
-	    
-    #pwm.set_pwm(LSERVO, 0, math.floor(1.5/ 20 * 4096))
-    #pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(testVar) / 20 * 4096))
-    #distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
-    #if (float(xInches) - float(distanceTravel)) <= 0.00:
-	    ## Write an initial value of 1.5, which keeps the servos stopped.
-        ## Due to how servos work, and the design of the Adafruit library,
-        ## the value must be divided by 20 and multiplied by 4096.
-        #pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
-        #pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
-        #exit()
-    #print("Number of Revolutions: ",(lRevolutions + rRevolutions) / 2)
-    #print("Distance Traveled: ", distanceTravel)
+	    exit()
+	
