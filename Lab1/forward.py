@@ -219,7 +219,7 @@ goodValue = False
 maxValue = 7.134
 
 # Calculating the inches per second
-ipsValue = (float(xInches) / float(yTime)
+ipsValue = (float(xInches) / float(yTime))
 
 # Checking if the entered input is possible and asking for new input if needed
 while goodValue != True:
@@ -227,12 +227,17 @@ while goodValue != True:
         print("Sorry but that request can not be completed. Please try again")
         xInches = input("Enter number of inches to travel: ")
         yTime = input("Enter time to complete set distance: ")
-        ipsValue = (float(xInches) / float(yTime)
+        ipsValue = (float(xInches) / float(yTime))
     else if ipsValue < 0:
         print("Sorry but I am only supposed to move forwards, not backwards. Please try again")
         xInches = input("Enter number of inches to travel: ")
         yTime = input("Enter time to complete set distance: ")
-        ipsValue = (float(xInches) / float(yTime)
+        ipsValue = (float(xInches) / float(yTime))
+    elif yTime < 0:
+        print("Time can not be negative. Please try again")
+        xInches = input("Enter number of inches to travel: ")
+        yTime = input("Enter time to complete set distance: ")
+        ipsValue = (float(xInches) / float(yTime))
     else:
 	    goodValue = True
 
