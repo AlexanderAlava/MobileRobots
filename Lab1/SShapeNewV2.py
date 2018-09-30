@@ -35,6 +35,7 @@ rSpeed = 0
 currentTime = 0
 lRevolutions = 0
 rRevolutions = 0
+distanceTravel = 0
 startTime = time.time()
 
 # Declaring and defining the left and right servos maps constructed with data generated from calibrateSpeeds()
@@ -101,21 +102,23 @@ def getSpeeds():
 
 # This function is called when the left encoder detects a rising edge signal.
 def onLeftEncode(pin):
-    global lTickCount, lRevolutions, lSpeed, currentTime
-    print("Left encoder ticked!")
+    global lTickCount, lRevolutions, lSpeed, currentTime, distanceTravel
+    #print("Left encoder ticked!")
     lTickCount = lTickCount + 1
     lRevolutions = float(lTickCount / 32)
     currentTime = time.time() - startTime
     lSpeed = lRevolutions / currentTime
+    print("Distance: ", distanceTravel)
 
 # This function is called when the right encoder detects a rising edge signal.
 def onRightEncode(pin):
-    global rTickCount, rRevolutions, rSpeed, currentTime
-    print("Right encoder ticked!")
+    global rTickCount, rRevolutions, rSpeed, currentTime, distanceTravel
+    #print("Right encoder ticked!")
     rTickCount = rTickCount + 1
     rRevolutions = float(rTickCount / 32)
     currentTime = time.time() - startTime
     rSpeed = rRevolutions / currentTime
+    print("Distance: ", distanceTravel)
 
 def servoFlip(speed):
 	difference = speed - 1.5
@@ -189,14 +192,14 @@ def setSpeedsIPS(ipsLeft, ipsRight):
 def setSpeedsvw1(v, w):
     leftSpeed1 = (v + (w*daxis))
     rightSpeed1 = (v - (w*daxis))
-    print(leftSpeed1, rightSpeed1)
+    #print(leftSpeed1, rightSpeed1)
     setSpeedsIPS(leftSpeed1, rightSpeed1)
 
 # Defining the speed function for the second arc
 def setSpeedsvw2(v, w):
     leftSpeed2 = (v - (w*daxis))
     rightSpeed2 = (v + (w*daxis))
-    print(leftSpeed2, rightSpeed2)
+    #print(leftSpeed2, rightSpeed2)
     setSpeedsIPS(leftSpeed2, rightSpeed2)
 
 ## Attach the Ctrl+C signal interrupt
@@ -219,16 +222,19 @@ linearSpeed = (float(arcPath1) + float(arcPath2))/float(circleTime)
 omega1 = float(linearSpeed)/float(circleRadius1)
 omega2 = float(linearSpeed)/float(circleRadius2)
 
-while True:
+firstFlag = True
+
+while firstFlag == True:
     # Setting speed for first arc
     setSpeedsvw1(linearSpeed, omega1)
     distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
 
     # Checking if the distance of the first arch has been traveled
     if (float(arcPath1) - float(distanceTravel)) <= 0.00:
-	    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
-	    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
-	    exit()
+        firstFlag = False
+        print("Flag was set to false")
+        pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
+        pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
 
 resetCounts()
 newInput = ''
@@ -237,13 +243,15 @@ newInput = ''
 while newInput != 'm':
 	newInput = input("Please enter \'m\' to continue the movement: ")
 
-while True:
+secondFlag = True
+while secondFlag == True:
     # Setting speed for second arc
     setSpeedsvw2(linearSpeed, omega2)
     distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
 
     # Checking if the distance of the fi arch has been traveled
     if (float(arcPath2) - float(distanceTravel)) <= 0.00:
-	    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
-	    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
-	    exit()
+        secondFlag = False
+        print("Second flag was set to false")
+        pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
+        pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));

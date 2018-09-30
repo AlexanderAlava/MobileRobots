@@ -81,12 +81,17 @@ rPwmTranslation = {
 
 #Function that resets the total count of ticks
 def resetCounts():
-    global totalCountTuple, lTickCount, rTickCount, startTime
+    global totalCountTuple, lTickCount, rTickCount, startTime, distanceTravel
+    global rRevolutions, lRevolutions
     #totalCountTuple[0] = totalCountTuple[0] + lTickCount
     #totalCountTuple[1] = totalCountTuple[1] + rTickCount
     lTickCount = 0
     rTickCount = 0
+    distanceTravel = 0
+    rRevolutions = 0
+    lRevolutions = 0
     startTime = time.time()
+    
 
 #Function that gets previous tick counts
 def getCounts():
@@ -230,11 +235,16 @@ while flag == True:
 	    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
 	    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
 	    flag = False
+	    print("Ended 1st loop")
 	    
 resetCounts()
-	
+print("Tick Count: ", lTickCount)
+print("Tick Count: ", rTickCount)
+print("Distance Travel:", distanceTravel)
+time.sleep(5)	
+
 while True:
-    setSpeedsIPS(0.92, 2.19)
+    setSpeedsIPS(1.15, 2.40)
     distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
     print (distanceTravel)
 	    
@@ -243,10 +253,12 @@ while True:
 	#	    distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
 	#	    print (distanceTravel)
 		    
-    if (float(15.71) - float(distanceTravel)) <= 0.00:
-	    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
-	    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
-	    exit()	    
+    if (float(25) - float(distanceTravel)) <= 0.00:
+        pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
+        pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
+        print("Ended 2nd loop")
+        print("Distance Travel:", distanceTravel)
+        exit()	    
 	    
     #pwm.set_pwm(LSERVO, 0, math.floor(1.5/ 20 * 4096))
     #pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(testVar) / 20 * 4096))

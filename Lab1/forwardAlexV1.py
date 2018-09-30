@@ -112,6 +112,7 @@ def onLeftEncode(pin):
     #print ("LRevolutions ", lRevolutions)
     #print ("LTime ", currentTime)
     #print ("LSpeed ", lSpeed)
+    
 
 # This function is called when the right encoder detects a rising edge signal.
 def onRightEncode(pin):

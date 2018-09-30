@@ -81,9 +81,10 @@ rPwmTranslation = {
 
 #Function that resets the total count of ticks
 def resetCounts():
-    global totalCountTuple, lTickCount, rTickCount, startTime
+    global totalCountTuple, lTickCount, rTickCount, startTime, distanceTravel
     lTickCount = 0
     rTickCount = 0
+    distanceTravel = 0
     startTime = time.time()
 
 #Function that gets previous tick counts
@@ -106,6 +107,7 @@ def onLeftEncode(pin):
     lRevolutions = float(lTickCount / 32)
     currentTime = time.time() - startTime
     lSpeed = lRevolutions / currentTime
+    print("Distance Traveled", distanceTravel)
 
 # This function is called when the right encoder detects a rising edge signal.
 def onRightEncode(pin):
@@ -115,6 +117,7 @@ def onRightEncode(pin):
     rRevolutions = float(rTickCount / 32)
     currentTime = time.time() - startTime
     rSpeed = rRevolutions / currentTime
+    print("Distance Traveled", distanceTravel)
 
 def servoFlip(speed):
 	difference = speed - 1.5
@@ -135,14 +138,14 @@ def initEncoders():
 # This function is called when Ctrl+C is pressed.
 # It's intended for properly exiting the program.
 def ctrlC(signum, frame):
-    print("Exiting")
+    #print("Exiting")
     GPIO.cleanup()
     ## Write an initial value of 1.5, which keeps the servos stopped.
     ## Due to how servos work, and the design of the Adafruit library,
     ## the value must be divided by 20 and multiplied by 4096.
     pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
-    print("Speed", getSpeeds())
+    #print("Speed", getSpeeds())
     time.sleep(3)
     exit()
 
@@ -157,7 +160,7 @@ def calibrateSpeeds():
         time.sleep(10)
 
         # Printing speeds to produce respective dictionaries
-        print (startVar,getSpeeds())
+        #print (startVar,getSpeeds())
         time.sleep(5)
 
         # Increasing pwm value
@@ -188,14 +191,14 @@ def setSpeedsIPS(ipsLeft, ipsRight):
 def setSpeedsvw1(v, w):
     leftSpeed1 = (v + (w*daxis))
     rightSpeed1 = (v - (w*daxis))
-    print(leftSpeed1, rightSpeed1)
+    #print(leftSpeed1, rightSpeed1)
     setSpeedsIPS(leftSpeed1, rightSpeed1)
 
 # Defining the speed function for the second arc
 def setSpeedsvw2(v, w):
     leftSpeed2 = (v - (w*daxis))
     rightSpeed2 = (v + (w*daxis))
-    print(leftSpeed2, rightSpeed2)
+    #print(leftSpeed2, rightSpeed2)
     setSpeedsIPS(leftSpeed2, rightSpeed2)
 
 # Prompting for and reading in user input
