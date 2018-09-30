@@ -199,8 +199,54 @@ def calibrateSpeeds():
 
 def setSpeedsRPS(rpsLeft, rpsRight):
     # Calculating pwm values from the respective dictionaries
-    lPwmValue = float(lPwmTranslation[rpsLeft])
-    rPwmValue = float(rPwmTranslation[rpsRight])
+
+    l = open("LeftSpeedCalibration.txt", "r")
+    r = open("RightSpeedCalibration.txt", "r")
+    left = rpsLeft
+    right = rpsRight
+    flag = True
+
+    while flag:
+
+        for line in l:
+            currentLine = line.split()
+            rpsValue = float(currentLine[0])
+            pwmValue = float(currentLine[1])
+
+            if left == rpsValue:
+                lPwmValue = pwmValue
+                flag = False
+                break
+            elif left > 0.87
+                lPwmValue = 0
+                flag = False
+                break
+
+        left = left + 0.01
+
+    flag = True
+
+    while flag:
+
+        for line in r:
+            currentLine = line.split()
+            rpsValue = float(currentLine[0])
+            pwmValue = float(currentLine[1])
+
+            if right == rpsValue:
+                rPwmValue = pwmValue
+                flag = False
+                break
+            elif left > 0.87
+                rPwmValue = 0
+                flag = False
+                break
+
+        right = right + 0.01
+
+
+    lPwmValue = float(lPwmTranslation[])
+    rPwmValue = float(rPwmTranslation[])
 
     # Setting appropiate speeds to the servos
     pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
@@ -214,12 +260,7 @@ def setSpeedsIPS(ipsLeft, ipsRight):
     rpsRight = float(math.ceil((ipsRight / 8.20) * 100) / 100)
 
     # Calculating pwm values from the respective dictionaries
-    lPwmValue = float(lPwmTranslation[rpsLeft])
-    rPwmValue = float(rPwmTranslation[rpsRight])
-
-    # Setting appropiate speeds to the servos
-    pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
-    pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
+    setSpeedsRPS(rpsLeft, rpsRight)
 
     return 0
 
