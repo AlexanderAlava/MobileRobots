@@ -3,6 +3,7 @@ import Adafruit_PCA9685
 import RPi.GPIO as GPIO
 import signal
 import math
+import decimal
 
 # The servo hat uses its own numbering scheme within the Adafruit library.
 # 0 represents the first servo, 1 for the second, and so on.
@@ -34,6 +35,11 @@ currentTime = 0
 lRevolutions = 0
 rRevolutions = 0
 startTime = time.time()
+
+leftset = False
+rightset = False
+leftflag = False
+rightflag = False
 
 # Declaring and defining the left and right servos maps constructed with data generated from calibrateSpeeds()
 lPwmTranslation = {
@@ -118,8 +124,8 @@ def onRightEncode(pin):
 
 # Defining function that flips the speed for the servo that's looking backwards
 def servoFlip(speed):
-	difference = speed - 1.5
-	return 1.5 - difference
+	difference = decimal.Decimal(speed) - decimal.Decimal(1.50)
+	return decimal.Decimal(1.50) - decimal.Decimal(difference)
 
 # Defining function that initializes the encoders
 def initEncoders():
@@ -198,82 +204,98 @@ def calibrateSpeeds():
     r.close()
 
 def setSpeedsRPS(rpsLeft, rpsRight):
-	
+    decimal.getcontext().prec=2
     print("RPS")
-	
+    global leftflag, rightflag, leftset, rightset
     # Calculating pwm values from the respective dictionaries
-
-    l = open("LeftSpeedCalibration.txt", "r")
-    r = open("RightSpeedCalibration.txt", "r")
-    left = rpsLeft
-    right = rpsRight
-    flag = True
-
+    left = decimal.Decimal(rpsLeft) + decimal.Decimal(0.00)
+    right = decimal.Decimal(rpsRight) + decimal.Decimal(0.00)
+    print("left: ", left)
+    print("right: ", right)
+    leftflag = True
+    rightflag = False
     print("RPS2")
+    decimal.getcontext().prec=2
+    testValue = decimal.Decimal(0.45)
+    print("test value", testValue)
+    testValue = testValue + decimal.Decimal(0.01)
+    #testValue = math.ceil(testValue*100) / 100
+    #format(testValue, '.2f')
+    print("Test value fixed: ", testValue)
 
-    while flag:
+    while leftflag != False:
 
         #print("RPS3")
-
+        l = open("LeftSpeedCalibration.txt", "r")
         for line in l:
             currentLine = line.split()
-            rpsValue = float(currentLine[0])
-            pwmValue = float(currentLine[1])
+            rpsValue = decimal.Decimal(currentLine[0])
+            pwmValue = decimal.Decimal(currentLine[1])
+            print("rpsValue: ",rpsValue)
+            print("pwmValue: ",pwmValue)
 
             print(left)
 
             if left == rpsValue:
                 print("SUP")
-                lPwmValue = pwmValue
-                flag = False
+                lPwmValue = decimal.Decimal(pwmValue)
+                leftset = True
+                leftflag = False
+                print("leftflag is set to: ", leftflag)
                 break
             elif left > 0.87:
                 lPwmValue = 0
-                flag = False
+                leftset = True
+                leftflag = False
+                print("leftflag is set to: ", leftflag)
                 break
-
+        l.close()
         print(left, " hey")
-        left = float((math.ceil(left + 0.01) * 100) / 100)
+        left = left + decimal.Decimal(0.01)
         time.sleep(3)
 
-    flag = True
+    #rightflag = True
+    
+    while rightflag == True:
 
-    while flag:
-
+        r = open("RightSpeedCalibration.txt", "r")
         for line in r:
             currentLine = line.split()
-            rpsValue = float(currentLine[0])
-            pwmValue = float(currentLine[1])
-
+            rpsValue = decimal.Decimal(currentLine[0])
+            pwmValue = decimal.Decimal(currentLine[1])
+            print("rpsValue: ",rpsValue)
+            print("pwmValue: ",pwmValue)
+            
             if right == rpsValue:
-                rPwmValue = pwmValue
-                flag = False
+                print("SUP")
+                rPwmValue = decimal.Decimal(pwmValue)
+                rightflag = False
+                rightset = True
                 break
             elif right > 0.87:
                 rPwmValue = 0
-                flag = False
+                rightflag = False
                 break
-
-        right = float((math.ceil(right + 0.01) * 100) / 100)
+        r.close()
+        print(right, " hey")
+        right = right + decimal.Decimal(0.01)
         print (right)
 
-    # Setting appropiate speeds to the servos
-    pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
-    pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
-
-    return 0
+    if rightset == True and leftset == True:
+        # Setting appropiate speeds to the servos
+        pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
+        pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
 
 def setSpeedsIPS(ipsLeft, ipsRight):
     # Converting inches per second into revolutions per second
-    rpsLeft = float(math.ceil((ipsLeft / 8.20) * 100) / 100)
-    rpsRight = float(math.ceil((ipsRight / 8.20) * 100) / 100)
+    decimal.getcontext().prec=2
+    rpsLeft = decimal.Decimal(math.ceil((ipsLeft / 8.20) * 100) / 100)
+    rpsRight = decimal.Decimal(math.ceil((ipsRight / 8.20) * 100) / 100)
 
     print("IPS")
 
     # Calculating pwm values from the respective dictionaries
     setSpeedsRPS(rpsLeft, rpsRight)
-
-    return 0
 
 # This function is called when Ctrl+C is pressed.
 # It's intended for properly exiting the program.
