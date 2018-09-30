@@ -198,6 +198,9 @@ def calibrateSpeeds():
     r.close()
 
 def setSpeedsRPS(rpsLeft, rpsRight):
+	
+    print("RPS")
+	
     # Calculating pwm values from the respective dictionaries
 
     l = open("LeftSpeedCalibration.txt", "r")
@@ -206,23 +209,32 @@ def setSpeedsRPS(rpsLeft, rpsRight):
     right = rpsRight
     flag = True
 
+    print("RPS2")
+
     while flag:
+
+        #print("RPS3")
 
         for line in l:
             currentLine = line.split()
             rpsValue = float(currentLine[0])
             pwmValue = float(currentLine[1])
 
+            print(left)
+
             if left == rpsValue:
+                print("SUP")
                 lPwmValue = pwmValue
                 flag = False
                 break
-            elif left > 0.87
+            elif left > 0.87:
                 lPwmValue = 0
                 flag = False
                 break
 
-        left = left + 0.01
+        print(left, " hey")
+        left = float((math.ceil(left + 0.01) * 100) / 100)
+        time.sleep(3)
 
     flag = True
 
@@ -237,16 +249,13 @@ def setSpeedsRPS(rpsLeft, rpsRight):
                 rPwmValue = pwmValue
                 flag = False
                 break
-            elif left > 0.87
+            elif right > 0.87:
                 rPwmValue = 0
                 flag = False
                 break
 
-        right = right + 0.01
-
-
-    lPwmValue = float(lPwmTranslation[])
-    rPwmValue = float(rPwmTranslation[])
+        right = float((math.ceil(right + 0.01) * 100) / 100)
+        print (right)
 
     # Setting appropiate speeds to the servos
     pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
@@ -258,6 +267,8 @@ def setSpeedsIPS(ipsLeft, ipsRight):
     # Converting inches per second into revolutions per second
     rpsLeft = float(math.ceil((ipsLeft / 8.20) * 100) / 100)
     rpsRight = float(math.ceil((ipsRight / 8.20) * 100) / 100)
+
+    print("IPS")
 
     # Calculating pwm values from the respective dictionaries
     setSpeedsRPS(rpsLeft, rpsRight)
@@ -288,7 +299,7 @@ initEncoders()
 distanceTravel = 0
 
 
-calibrateSpeeds()
+#calibrateSpeeds()
 
 
 ############################### Main code ##################################
@@ -304,7 +315,8 @@ goodValue = False
 maxValue = 7.134
 
 # Calculating the inches per second
-ipsValue = (float(xInches) / float(yTime))
+ipsValue = float(math.ceil((float(xInches) / float(yTime)) * 100) / 100)
+print (ipsValue)
 
 # Checking if the entered input is possible and asking for new input if needed
 while goodValue != True:
@@ -312,12 +324,14 @@ while goodValue != True:
         print("Sorry but that request can not be completed. Please try again")
         xInches = input("Enter number of inches to travel: ")
         yTime = input("Enter time to complete set distance: ")
-        ipsValue = (float(xInches) / float(yTime))
+        ipsValue = float(math.ceil((float(xInches) / float(yTime)) * 100) / 100)
+        print(ipsValue)
     elif ipsValue < 0:
         print("Sorry but I am only supposed to move forwards, not backwards. Please try again")
         xInches = input("Enter number of inches to travel: ")
         yTime = input("Enter time to complete set distance: ")
-        ipsValue = (float(xInches) / float(yTime))
+        ipsValue = float(math.ceil((float(xInches) / float(yTime)) * 100) / 100)
+        print(ipsValue)
     else:
 	    goodValue = True
 
