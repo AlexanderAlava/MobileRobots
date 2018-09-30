@@ -153,7 +153,7 @@ def calibrateSpeeds():
         # Resetting start time and tick counts
         resetCounts()
 
-        time.sleep(10)
+        time.sleep(3)
 
         # Printing speeds to produce respective dictionaries
         print (startVar,getSpeeds())
@@ -162,8 +162,8 @@ def calibrateSpeeds():
         currentSpeeds = getSpeeds()
         currentLeftSpeed = float(math.ceil((currentSpeeds[0]) * 100) / 100)
         currentRightSpeed = float(math.ceil((currentSpeeds[1]) * 100) / 100)
-        l.write(currentLeftSpeed + " " + startVar)
-        r.write(currentRightSpeed + " " + startVar)
+        l.write(str(currentLeftSpeed) + " " + str(startVar) + "\n")
+        r.write(str(currentRightSpeed) + " " + str(startVar) + "\n")
         time.sleep(1)
 
 
@@ -173,17 +173,17 @@ def calibrateSpeeds():
         # Resetting start time and tick counts
         resetCounts()
 
-        time.sleep(10)
+        time.sleep(3)
 
         # Printing speeds to produce respective dictionaries
-        print (startVar,getSpeeds())
+        print (endVar,getSpeeds())
         time.sleep(3)
 
         currentSpeeds = getSpeeds()
         currentLeftSpeed = float(math.ceil((currentSpeeds[0]) * 100) / 100)
         currentRightSpeed = float(math.ceil((currentSpeeds[1]) * 100) / 100)
-        l.write(currentLeftSpeed + " " + endVar)
-        r.write(currentRightSpeed + " " + endVar)
+        l.write("-" + str(currentLeftSpeed) + " " + str(endVar) + "\n")
+        r.write("-" + str(currentRightSpeed) + " " + str(endVar) + "\n")
         time.sleep(1)
 
         # Increasing pwm value
