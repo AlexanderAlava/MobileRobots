@@ -211,13 +211,7 @@ circleRadius1 = 0
 circleRadius2 = 0
 circleTime = 0
 circleRadius1 = input("Enter radius R for circle 1: ")
-if(float(circleRadius1) < 2.0):
-    print("Entered radius is too small and can not be completed.")
-    exit()
 circleRadius2 = input("Enter radius R for circle 2: ")
-if(float(circleRadius2) < 2.0):
-    print("Entered radius is too small and can not be completed.")
-    exit()	
 circleTime = input("Enter time to complete circles: ")
 
 # Computing required values
@@ -236,12 +230,10 @@ if((float(linearSpeed) > 7.134) or (float(linearSpeed) < 0)):
 omega1 = float(linearSpeed)/float(circleRadius1)
 omega2 = float(linearSpeed)/float(circleRadius2)
 
-#Computeing linear velocities for each wheel to ensure that it is possible to perform S shape.
+##Computing linear velocities for each outside wheel to ensure that it is possible to perform S shape.
 leftLinearSpeed1 = (omega1 * (float(circleRadius1) + 1.985))
-rightLinearSpeed1 = (omega1 * (float(circleRadius1) - 1.985))
-leftLinearSpeed2 = (omega2 * (float(circleRadius2) + 1.985))
-rightLinearSpeed2 = (omega2 * (float(circleRadius2) - 1.985))
-if((leftLinearSpeed1 > 7.134) or (leftLinearSpeed2 > 7.134) or (rightLinearSpeed1 > 7.134) or (rightLinearSpeed2 > 7.134)):
+rightLinearSpeed2 = (omega2 * (float(circleRadius2) + 1.985))
+if((leftLinearSpeed1 > 7.134) or (rightLinearSpeed2 > 7.134)):
     print("Computed speed for individual wheel exceeds the maximum")
     exit()
 
