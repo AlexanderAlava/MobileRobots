@@ -49,6 +49,31 @@ rPwmTranslation = {
                     0.85: 1.62, 0.86: 1.65, 0.87: 1.70
                     }
 
+# The servo hat uses its own numbering scheme within the Adafruit library.
+# 0 represents the first servo, 1 for the second, and so on.
+LSERVO = 0
+RSERVO = 1
+
+# Initialize the servo hat library.
+pwm = Adafruit_PCA9685.PCA9685()
+
+# 50Hz is used for the frequency of the servos.
+pwm.set_pwm_freq(50)
+
+# Pins that the encoders are connected to
+LENCODER = 17
+RENCODER = 18
+
+#Values
+lTickCount = 0
+rTickCount = 0
+lSpeed = 0
+rSpeed = 0
+currentTime = 0
+lRevolutions = 0
+rRevolutions = 0
+startTime = time.time()
+
 # Pins that the sensors are connected to
 LSHDN = 27
 FSHDN = 22
