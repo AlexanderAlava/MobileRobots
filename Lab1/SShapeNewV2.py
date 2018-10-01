@@ -211,11 +211,11 @@ circleRadius1 = 0
 circleRadius2 = 0
 circleTime = 0
 circleRadius1 = input("Enter radius R for circle 1: ")
-if(circleRadius1 < 2.0):
+if(float(circleRadius1) < 2.0):
     print("Entered radius is too small and can not be completed.")
-	exit()
+    exit()
 circleRadius2 = input("Enter radius R for circle 2: ")
-if(circleRadius2 < 2.0):
+if(float(circleRadius2) < 2.0):
     print("Entered radius is too small and can not be completed.")
     exit()	
 circleTime = input("Enter time to complete circles: ")
@@ -224,12 +224,12 @@ circleTime = input("Enter time to complete circles: ")
 daxis = float(3.95)
 arcPath1 = float(3.14159)*(float(circleRadius1))
 arcPath2 = float(3.14159)*(float(circleRadius2))
-if(circleTime > 0):
+if(int(circleTime) > 0):
     linearSpeed = (float(arcPath1) + float(arcPath2))/float(circleTime)   
 else:
     print("The time entered to complete S shape is imposible")
     exit()
-if((linearSpeed > 7.134) or (linearSpeed < 0)):
+if((float(linearSpeed) > 7.134) or (float(linearSpeed) < 0)):
     print("The computed linear speed for the S shape is greater than the robot's max speed of 7.134 ips")
     exit()
 	
@@ -237,20 +237,19 @@ omega1 = float(linearSpeed)/float(circleRadius1)
 omega2 = float(linearSpeed)/float(circleRadius2)
 
 #Computeing linear velocities for each wheel to ensure that it is possible to perform S shape.
-leftLinearSpeed1 = (omega1 * (circleRadius1 + 1.985))
-rightLinearSpeed1 = (omega1 * (circleRadius1 - 1.985))
-leftLinearSpeed2 = (omega2 * (circleRadius2 + 1.985))
-rightLinearSpeed2 = (omega2 * (circleRadius2 - 1.985))
+leftLinearSpeed1 = (omega1 * (float(circleRadius1) + 1.985))
+rightLinearSpeed1 = (omega1 * (float(circleRadius1) - 1.985))
+leftLinearSpeed2 = (omega2 * (float(circleRadius2) + 1.985))
+rightLinearSpeed2 = (omega2 * (float(circleRadius2) - 1.985))
 if((leftLinearSpeed1 > 7.134) or (leftLinearSpeed2 > 7.134) or (rightLinearSpeed1 > 7.134) or (rightLinearSpeed2 > 7.134)):
     print("Computed speed for individual wheel exceeds the maximum")
-	exit()
+    exit()
 
 firstFlag = True
 
 while firstFlag == True:
     # Setting speed for first arc
     setSpeedsvw1(linearSpeed, omega1)
-    resetCounts()
     distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
 
     # Checking if the distance of the first arch has been traveled
@@ -271,7 +270,6 @@ secondFlag = True
 while secondFlag == True:
     # Setting speed for second arc
     setSpeedsvw2(linearSpeed, omega2)
-    resetCounts()
     distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
 
     # Checking if the distance of the fi arch has been traveled
