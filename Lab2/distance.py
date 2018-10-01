@@ -118,6 +118,18 @@ GPIO.output(FSHDN, GPIO.HIGH)
 time.sleep(0.01)
 fSensor.start_ranging(VL53L0X.VL53L0X_GOOD_ACCURACY_MODE)
 
+def ctrlC(signum, frame):
+    print("Exiting")
+    GPIO.cleanup()
+    ## Write an initial value of 1.5, which keeps the servos stopped.
+    ## Due to how servos work, and the design of the Adafruit library,
+    ## the value must be divided by 20 and multiplied by 4096.
+    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
+    print("Speed", getSpeeds())
+    time.sleep(3)
+    exit()
+
 def servoFlip(speed):
 	difference = speed - 1.5
 	return 1.5 - difference
@@ -127,37 +139,51 @@ def setSpeedsIPS(ipsLeft, ipsRight):
     rpsLeft = float(math.ceil((ipsLeft / 8.20) * 100) / 100)
     rpsRight = float(math.ceil((ipsRight / 8.20) * 100) / 100)
 
+    if rpsLeft < 0:
+        rpsLeft = 0 - rpsLeft
+    if rpsRight < 0:
+        rpsRight = 0 - rpsRight
+
     # Calculating pwm values from the respective dictionaries
     lPwmValue = float(lPwmTranslation[rpsLeft])
     rPwmValue = float(rPwmTranslation[rpsRight])
 
-    if ipsLeft >= 0 || ipsRight >= 0:
+    if ipsLeft < 0 or ipsRight < 0:
         # Setting appropiate speeds to the servos when going forwards
         pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
         pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
-    elif ipsLeft < 0 || ipsRight < 0:
+    elif ipsLeft >= 0 or ipsRight >= 0:
         # Setting apporpiate speeds to the servos when going backwards
         pwm.set_pwm(LSERVO, 0, math.floor(servoFlip(lPwmValue) / 20 * 4096))
         pwm.set_pwm(RSERVO, 0, math.floor(rPwmValue / 20 * 4096))
 
 def saturationFunction(ips):
     controlSignal = ips
-    if controlSignal > 7.134
-        controlSignal = 7.134
-    elif controlSignal < -7.134:
-        controlSignal = -7.134
+    if controlSignal > 7.1:
+        controlSignal = 7.1
+    elif controlSignal < -7.1:
+        controlSignal = -7.1
     return controlSignal
 
 desiredDistance = 5.0
-kpValue = 0
+kpValue = 1
+
+pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
+pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
+time.sleep(10)
+
 
 while True:
     fDistance = fSensor.get_distance()
+    print (fDistance)
     inchesDistance = fDistance * 0.0393700787
+    print (inchesDistance)
     error = desiredDistance - inchesDistance
+    print (error)
     controlSignal = kpValue * error
-    controlSignal = saturationFunction(controlSignal)
-    setSpeedsIPS(controlSignal,controlSignal)
+    newSignal = saturationFunction(controlSignal)
+    print (newSignal)
+    setSpeedsIPS(newSignal, newSignal)
 
 # Stop measurement for all sensors
 lSensor.stop_ranging()
