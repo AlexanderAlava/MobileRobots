@@ -3,7 +3,6 @@ import Adafruit_PCA9685
 import RPi.GPIO as GPIO
 import signal
 import math
-import decimal
 
 # The servo hat uses its own numbering scheme within the Adafruit library.
 # 0 represents the first servo, 1 for the second, and so on.
@@ -26,16 +25,14 @@ pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
 LENCODER = 17
 RENCODER = 18
 
-# Declaring and initializing global variables
+#Values
 lTickCount = 0
 rTickCount = 0
-totalCountTuple = (0, 0)
 lSpeed = 0
 rSpeed = 0
 currentTime = 0
 lRevolutions = 0
 rRevolutions = 0
-distanceTravel = 0
 startTime = time.time()
 
 # Declaring and defining the left and right servos maps constructed with data generated from calibrateSpeeds()
@@ -82,10 +79,9 @@ rPwmTranslation = {
 
 #Function that resets the total count of ticks
 def resetCounts():
-    global totalCountTuple, lTickCount, rTickCount, startTime, distanceTravel
+    global totalCountTuple, lTickCount, rTickCount, startTime
     lTickCount = 0
     rTickCount = 0
-    distanceTravel = 0
     startTime = time.time()
 
 #Function that gets previous tick counts
@@ -102,28 +98,30 @@ def getSpeeds():
 
 # This function is called when the left encoder detects a rising edge signal.
 def onLeftEncode(pin):
-    global lTickCount, lRevolutions, lSpeed, currentTime, distanceTravel
-    #print("Left encoder ticked!")
+    global lTickCount, lRevolutions, lSpeed, currentTime
+
+    # Increasing tickcount and computing instantaneous values
     lTickCount = lTickCount + 1
     lRevolutions = float(lTickCount / 32)
     currentTime = time.time() - startTime
     lSpeed = lRevolutions / currentTime
-    print("Distance: ", distanceTravel)
 
 # This function is called when the right encoder detects a rising edge signal.
 def onRightEncode(pin):
-    global rTickCount, rRevolutions, rSpeed, currentTime, distanceTravel
-    #print("Right encoder ticked!")
+    global rTickCount, rRevolutions, rSpeed, currentTime
+
+    # Increasing tickcount and computing instantaneous values
     rTickCount = rTickCount + 1
     rRevolutions = float(rTickCount / 32)
     currentTime = time.time() - startTime
     rSpeed = rRevolutions / currentTime
-    print("Distance: ", distanceTravel)
 
+# Defining function that flips the speed for the servo that's looking backwards
 def servoFlip(speed):
 	difference = speed - 1.5
 	return 1.5 - difference
 
+# Defining function that initializes the encoders
 def initEncoders():
     # Set the pin numbering scheme to the numbering shown on the robot itself.
     GPIO.setmode(GPIO.BCM)
@@ -136,21 +134,9 @@ def initEncoders():
     GPIO.add_event_detect(LENCODER, GPIO.RISING, onLeftEncode)
     GPIO.add_event_detect(RENCODER, GPIO.RISING, onRightEncode)
 
-# This function is called when Ctrl+C is pressed.
-# It's intended for properly exiting the program.
-def ctrlC(signum, frame):
-    print("Exiting")
-    GPIO.cleanup()
-    ## Write an initial value of 1.5, which keeps the servos stopped.
-    ## Due to how servos work, and the design of the Adafruit library,
-    ## the value must be divided by 20 and multiplied by 4096.
-    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
-    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
-    print("Speed", getSpeeds())
-    time.sleep(3)
-    exit()
-
+# Function used to produce the traslation dictionaries
 def calibrateSpeeds():
+    # Starting at full stop
     startVar = 1.5
 
     # Looping until it reaches the maximum required value
@@ -170,111 +156,102 @@ def calibrateSpeeds():
         # Resetting start time and tick counts
         resetCounts()
 
-# Defining the function that sets speed to revolutions per second
 def setSpeedsRPS(rpsLeft, rpsRight):
+    # Calculating pwm values from the respective dictionaries
     lPwmValue = float(lPwmTranslation[rpsLeft])
     rPwmValue = float(rPwmTranslation[rpsRight])
+
+    # Setting appropiate speeds to the servos
     pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
 
+    return 0
 
-# Defining the function that sets speed to inches per second
 def setSpeedsIPS(ipsLeft, ipsRight):
+    # Converting inches per second into revolutions per second
     rpsLeft = float(math.ceil((ipsLeft / 8.20) * 100) / 100)
     rpsRight = float(math.ceil((ipsRight / 8.20) * 100) / 100)
+
+    # Calculating pwm values from the respective dictionaries
     lPwmValue = float(lPwmTranslation[rpsLeft])
     rPwmValue = float(rPwmTranslation[rpsRight])
+
+    # Setting appropiate speeds to the servos
     pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
-   
 
-# Defining the speed function for the first arc
-def setSpeedsvw1(v, w):
-    leftSpeed1 = (v + (w*daxis))
-    rightSpeed1 = (v - (w*daxis))
-    #print(leftSpeed1, rightSpeed1)
-    setSpeedsIPS(leftSpeed1, rightSpeed1)
+    return 0
 
-# Defining the speed function for the second arc
-def setSpeedsvw2(v, w):
-    leftSpeed2 = (v - (w*daxis))
-    rightSpeed2 = (v + (w*daxis))
-    #print(leftSpeed2, rightSpeed2)
-    setSpeedsIPS(leftSpeed2, rightSpeed2)
+# This function is called when Ctrl+C is pressed.
+# It's intended for properly exiting the program.
+def ctrlC(signum, frame):
+    print("Exiting")
+    GPIO.cleanup()
+    ## Write an initial value of 1.5, which keeps the servos stopped.
+    ## Due to how servos work, and the design of the Adafruit library,
+    ## the value must be divided by 20 and multiplied by 4096.
+    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
+    print("Speed", getSpeeds())
+    time.sleep(3)
+    exit()
 
 ## Attach the Ctrl+C signal interrupt
-signal.signal(signal.SIGINT, ctrlC)	
-initEncoders()	
-	
-# Prompting for and reading in user input
-circleRadius1 = 0
-circleRadius2 = 0
-circleTime = 0
-circleRadius1 = input("Enter radius R for circle 1: ")
-if(float(circleRadius1) < 2.0):
-    print("Entered radius is too small and can not be completed.")
-    exit()
-circleRadius2 = input("Enter radius R for circle 2: ")
-if(float(circleRadius2) < 2.0):
-    print("Entered radius is too small and can not be completed.")
-    exit()	
-circleTime = input("Enter time to complete circles: ")
+signal.signal(signal.SIGINT, ctrlC)
 
-# Computing required values
-daxis = float(3.95)
-arcPath1 = float(3.14159)*(float(circleRadius1))
-arcPath2 = float(3.14159)*(float(circleRadius2))
-if(int(circleTime) > 0):
-    linearSpeed = (float(arcPath1) + float(arcPath2))/float(circleTime)   
-else:
-    print("The time entered to complete S shape is imposible")
-    exit()
-if((float(linearSpeed) > 7.134) or (float(linearSpeed) < 0)):
-    print("The computed linear speed for the S shape is greater than the robot's max speed of 7.134 ips")
-    exit()
-	
-omega1 = float(linearSpeed)/float(circleRadius1)
-omega2 = float(linearSpeed)/float(circleRadius2)
+# Initializing encoders
+initEncoders()
 
-#Computeing linear velocities for each wheel to ensure that it is possible to perform S shape.
-leftLinearSpeed1 = (omega1 * (float(circleRadius1) + 1.985))
-rightLinearSpeed1 = (omega1 * (float(circleRadius1) - 1.985))
-leftLinearSpeed2 = (omega2 * (float(circleRadius2) + 1.985))
-rightLinearSpeed2 = (omega2 * (float(circleRadius2) - 1.985))
-if((leftLinearSpeed1 > 7.134) or (leftLinearSpeed2 > 7.134) or (rightLinearSpeed1 > 7.134) or (rightLinearSpeed2 > 7.134)):
-    print("Computed speed for individual wheel exceeds the maximum")
-    exit()
+# Declaring variable to keep track of distance traveled
+distanceTravel = 0
 
-firstFlag = True
 
-while firstFlag == True:
-    # Setting speed for first arc
-    setSpeedsvw1(linearSpeed, omega1)
-    distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
+############################### Main code ##################################
 
-    # Checking if the distance of the first arch has been traveled
-    if (float(arcPath1) - float(distanceTravel)) <= 0.00:
-        firstFlag = False
-        print("Flag was set to false")
-        pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
-        pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
+# Prompting for user input for distance and time
+xInches = input("Enter number of inches to travel: ")
+yTime = input("Enter time to complete set distance: ")
 
-resetCounts()
+# Setting boolean flag to False initially
+goodValue = False
+
+# Establishing the maximum value in inches per second
+maxValue = 7.134
+
+# Calculating the inches per second
+ipsValue = (float(xInches) / float(yTime))
+
+# Checking if the entered input is possible and asking for new input if needed
+while goodValue != True:
+    if ipsValue > maxValue:
+        print("Sorry but that request can not be completed. Please try again")
+        xInches = input("Enter number of inches to travel: ")
+        yTime = input("Enter time to complete set distance: ")
+        ipsValue = (float(xInches) / float(yTime))
+    elif ipsValue < 0:
+        print("Sorry but I am only supposed to move forwards, not backwards. Please try again")
+        xInches = input("Enter number of inches to travel: ")
+        yTime = input("Enter time to complete set distance: ")
+        ipsValue = (float(xInches) / float(yTime))
+    else:
+	    goodValue = True
+
 newInput = ''
 
-# Waiting for user input to proceed
-while newInput != 'm':
-	newInput = input("Please enter \'m\' to continue the movement: ")
+while newInput != 's':
+    newInput = input("Please enter \'s\' to have the robot start it's movement: ")
 
-secondFlag = True
-while secondFlag == True:
-    # Setting speed for second arc
-    setSpeedsvw2(linearSpeed, omega2)
+while True:
+    setSpeedsIPS(ipsValue, ipsValue)
+
+    # Checking if the robot has already traveled the required distance
     distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
-
-    # Checking if the distance of the fi arch has been traveled
-    if (float(arcPath2) - float(distanceTravel)) <= 0.00:
-        secondFlag = False
-        print("Second flag was set to false")
+    if (float(xInches) - float(distanceTravel)) <= 0.00:
+	    # Stopping both servos and exiting the loop
         pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096));
         pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096));
+        exit()
+
+    # Printing final numbers
+    print("Number of Revolutions: ",(lRevolutions + rRevolutions) / 2)
+    print("Distance Traveled: ", distanceTravel)

@@ -166,15 +166,17 @@ def saturationFunction(ips):
     return controlSignal
 
 desiredDistance = 5.0
-kpValue = 1
+kpValue = 5.0
 
 pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
 pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
 time.sleep(10)
 
+f = open("kp50.csv", "w+")
 
 while True:
     fDistance = fSensor.get_distance()
+    f.write(str(fDistance) + "," + str(time.time() - startTime) + "\n")
     print (fDistance)
     inchesDistance = fDistance * 0.0393700787
     print (inchesDistance)
