@@ -318,7 +318,7 @@ distanceTravel = 0
 
 ############################### Main code ##################################
 
-calibrateSpeeds()
+#calibrateSpeeds()
 readCalibratedSpeeds()
 
 # Prompting for user input for distance and time
