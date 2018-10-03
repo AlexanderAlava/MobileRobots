@@ -3,7 +3,6 @@ import Adafruit_PCA9685
 import RPi.GPIO as GPIO
 import signal
 import math
-import decimal
 
 # The servo hat uses its own numbering scheme within the Adafruit library.
 # 0 represents the first servo, 1 for the second, and so on.
@@ -36,14 +35,13 @@ lRevolutions = 0
 rRevolutions = 0
 startTime = time.time()
 
-leftset = False
-rightset = False
-leftflag = False
-rightflag = False
-
 # Declaring and defining the left and right servos maps constructed with data generated from calibrateSpeeds()
 lPwmTranslation = {}
 rPwmTranslation = {}
+
+# Declaring list for the dictionaries keys
+keylistLeft = []
+keylistRight = []
 
 #Function that resets the total count of ticks
 def resetCounts():
@@ -86,8 +84,8 @@ def onRightEncode(pin):
 
 # Defining function that flips the speed for the servo that's looking backwards
 def servoFlip(speed):
-	difference = decimal.Decimal(speed) - decimal.Decimal(1.50)
-	return decimal.Decimal(1.50) - decimal.Decimal(difference)
+	difference = speed - 1.5
+	return 1.5 - difference
 
 # Defining function that initializes the encoders
 def initEncoders():
@@ -105,9 +103,55 @@ def initEncoders():
 # Function used to produce the traslation dictionaries
 def calibrateSpeeds():
     # Starting at full stop
+    startVar = 1.5
+
+    # Looping until it reaches the maximum required value
+    while startVar < 1.71:
+        # Setting values for both servos
+        pwm.set_pwm(LSERVO, 0, math.floor(startVar / 20 * 4096))
+        pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(startVar) / 20 * 4096))
+        time.sleep(10)
+
+        # Printing speeds to produce respective dictionaries
+        print (startVar,getSpeeds())
+        time.sleep(5)
+
+        # Increasing pwm value
+        startVar = startVar + 0.005
+
+        # Resetting start time and tick counts
+        resetCounts()
+
+def setSpeedsRPS(rpsLeft, rpsRight):
+    # Calculating pwm values from the respective dictionaries
+    pwmValues = findPwmValues(rpsLeft, rpsRight)
+
+    lPwmValue = float(pwmValues[0])
+    rPwmValue = float(pwmValues[1])
+
+    # Setting appropiate speeds to the servos
+    pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
+
+    return 0
+
+def setSpeedsIPS(ipsLeft, ipsRight):
+    # Converting inches per second into revolutions per second
+    rpsLeft = float(math.ceil((ipsLeft / 8.20) * 100) / 100)
+    rpsRight = float(math.ceil((ipsRight / 8.20) * 100) / 100)
+
+    # Calling the setSpeedsRPS function with the appropiate parameters
+    setSpeedsRPS(rpsLeft, rpsRight)
+
+    return 0
+
+# Function used to produce the traslation dictionaries
+def calibrateSpeeds():
+    # Starting at full stop
     startVar = 1.7
     endVar = 1.3
 
+    # Opening files for storing calibration values
     l = open("LeftSpeedCalibration.txt", "w+")
     r = open("RightSpeedCalibration.txt", "w+")
 
@@ -127,6 +171,7 @@ def calibrateSpeeds():
         print (startVar,getSpeeds())
         time.sleep(3)
 
+        # Reading the current speeds for both wheels and storing them in their respective file
         currentSpeeds = getSpeeds()
         currentLeftSpeed = currentSpeeds[0]
         currentRightSpeed = currentSpeeds[1]
@@ -134,7 +179,7 @@ def calibrateSpeeds():
         r.write(str(currentRightSpeed) + " " + str(startVar) + "\n")
         time.sleep(1)
 
-
+        # Setting values for both servos
         pwm.set_pwm(LSERVO, 0, math.floor(endVar / 20 * 4096))
         pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(endVar) / 20 * 4096))
 
@@ -147,9 +192,10 @@ def calibrateSpeeds():
         print (endVar,getSpeeds())
         time.sleep(3)
 
+        # Reading the current speeds for both wheels and storing them in their respective file
         currentSpeeds = getSpeeds()
-        currentLeftSpeed = float(math.ceil((currentSpeeds[0]) * 100) / 100)
-        currentRightSpeed = float(math.ceil((currentSpeeds[1]) * 100) / 100)
+        currentLeftSpeed = currentSpeeds[0]
+        currentRightSpeed = currentSpeeds[1]
         l.write("-" + str(currentLeftSpeed) + " " + str(endVar) + "\n")
         r.write("-" + str(currentRightSpeed) + " " + str(endVar) + "\n")
         time.sleep(1)
@@ -162,12 +208,15 @@ def calibrateSpeeds():
         # Resetting start time and tick counts
         resetCounts()
 
+    # Closing both files
     l.close()
     r.close()
 
+# Function used to read the files with the calibration values and creating dictionaries storing the needed values
 def readCalibratedSpeeds():
-    global lPwmTranslation, rPwmTranslation
+    global lPwmTranslation, rPwmTranslation, keylistLeft, keylistRight
 
+    # Reading all calibration values for the left wheel and storing them in their respective dictonary
     l = open("LeftSpeedCalibration.txt", "r")
     for line in l:
         currentLine = line.split()
@@ -176,6 +225,7 @@ def readCalibratedSpeeds():
         lPwmTranslation[rpsValue] = pwmValue
     l.close()
 
+    # Reading all calibration values for the right wheel and storing them in their respective dictonary
     r = open("RightSpeedCalibration.txt", "r")
     for line in r:
         currentLine = line.split()
@@ -184,139 +234,63 @@ def readCalibratedSpeeds():
         rPwmTranslation[rpsValue] = pwmValue
     r.close()
 
-    keylistLeft = lPwmTranslation.keys()
+    # Creating a list of the keys of the left wheel dictionary and sorting it
+    keylistLeft = list(lPwmTranslation.keys())
     keylistLeft.sort()
-    keylistRight = rPwmTranslation.keys()
+
+    # Creating a list of the keys of the right wheel dictionary and sorting it
+    keylistRight = list(rPwmTranslation.keys())
     keylistRight.sort()
 
+# Function that translates rps values into pwm values
 def findPwmValues(rpsLeft, rpsRight):
+    # Checking if the rps value exists exactly on our calibrated values
     if rpsLeft in keylistLeft:
         pwmLeft = lPwmTranslation[rpsLeft]
+    # Checking if the rps value is less than the possible minimum
     elif rpsLeft < min(keylistLeft):
         pwmLeft = lPwmTranslation[keylistLeft[0]]
     else:
+        # Tracker for the next element
         nextElem = 1
+        # Iterating through all ordered rpm values in order to find the closest one possible
         for elem in keylistLeft:
+            # Checking if the list has reached its maximum value and therefore returning it
             if elem == max(keylistLeft):
                 pwmLeft = lPwmTranslation[elem]
                 break
             elif rpsLeft > elem:
+                # Checking if the element falls within two values and returning the highest one
                 if rpsLeft < keylistLeft[nextElem]:
                     pwmLeft = lPwmTranslation[keylistLeft[nextElem]]
                     break
+            # Increasing tracker
             nextElem += 1
 
+    # Checking if the rps value exists exactly on our calibrated values
     if rpsRight in keylistRight:
         pwmRight = rPwmTranslation[rpsRight]
+    # Checking if the rps value is less than the possible minimum
     elif rpsRight < min(keylistRight):
         pwmRight = rPwmTranslation[keylistRight[0]]
     else:
+        # Tracker for the next element
         nextElem = 1
+        # Iterating through all ordered rpm values in order to find the closest one possible
         for elem in keylistRight:
+            # Checking if the list has reached its maximum value and therefore returning it
             if elem == max(keylistRight):
                 pwmRight = rPwmTranslation[elem]
                 break
             elif rpsRight > elem:
+                # Checking if the element falls within two values and returning the highest one
                 if rpsRight < keylistRight[nextElem]:
                     pwmRight = rPwmTranslation[keylistRight[nextElem]]
                     break
+            # Increasing tracker
             nextElem += 1
 
-
-
-def setSpeedsRPS(rpsLeft, rpsRight):
-    decimal.getcontext().prec=2
-    print("RPS")
-    global leftflag, rightflag, leftset, rightset
-    # Calculating pwm values from the respective dictionaries
-    left = decimal.Decimal(rpsLeft) + decimal.Decimal(0.00)
-    right = decimal.Decimal(rpsRight) + decimal.Decimal(0.00)
-    print("left: ", left)
-    print("right: ", right)
-    leftflag = True
-    rightflag = False
-    print("RPS2")
-    decimal.getcontext().prec=2
-    testValue = decimal.Decimal(0.45)
-    print("test value", testValue)
-    testValue = testValue + decimal.Decimal(0.01)
-    #testValue = math.ceil(testValue*100) / 100
-    #format(testValue, '.2f')
-    print("Test value fixed: ", testValue)
-
-    while leftflag != False:
-
-        #print("RPS3")
-        l = open("LeftSpeedCalibration.txt", "r")
-        for line in l:
-            currentLine = line.split()
-            rpsValue = decimal.Decimal(currentLine[0])
-            pwmValue = decimal.Decimal(currentLine[1])
-            print("rpsValue: ",rpsValue)
-            print("pwmValue: ",pwmValue)
-
-            print(left)
-
-            if left == rpsValue:
-                print("SUP")
-                lPwmValue = decimal.Decimal(pwmValue)
-                leftset = True
-                leftflag = False
-                print("leftflag is set to: ", leftflag)
-                break
-            elif left > 0.87:
-                lPwmValue = 0
-                leftset = True
-                leftflag = False
-                print("leftflag is set to: ", leftflag)
-                break
-        l.close()
-        print(left, " hey")
-        left = left + decimal.Decimal(0.01)
-        time.sleep(3)
-
-    #rightflag = True
-
-    while rightflag == True:
-
-        r = open("RightSpeedCalibration.txt", "r")
-        for line in r:
-            currentLine = line.split()
-            rpsValue = decimal.Decimal(currentLine[0])
-            pwmValue = decimal.Decimal(currentLine[1])
-            print("rpsValue: ",rpsValue)
-            print("pwmValue: ",pwmValue)
-
-            if right == rpsValue:
-                print("SUP")
-                rPwmValue = decimal.Decimal(pwmValue)
-                rightflag = False
-                rightset = True
-                break
-            elif right > 0.87:
-                rPwmValue = 0
-                rightflag = False
-                break
-        r.close()
-        print(right, " hey")
-        right = right + decimal.Decimal(0.01)
-        print (right)
-
-    if rightset == True and leftset == True:
-        # Setting appropiate speeds to the servos
-        pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
-
-def setSpeedsIPS(ipsLeft, ipsRight):
-    # Converting inches per second into revolutions per second
-    decimal.getcontext().prec=2
-    rpsLeft = decimal.Decimal(math.ceil((ipsLeft / 8.20) * 100) / 100)
-    rpsRight = decimal.Decimal(math.ceil((ipsRight / 8.20) * 100) / 100)
-
-    print("IPS")
-
-    # Calculating pwm values from the respective dictionaries
-    setSpeedsRPS(rpsLeft, rpsRight)
+    return (pwmLeft, pwmRight)
 
 # This function is called when Ctrl+C is pressed.
 # It's intended for properly exiting the program.
@@ -342,10 +316,10 @@ initEncoders()
 distanceTravel = 0
 
 
-#calibrateSpeeds()
-
-
 ############################### Main code ##################################
+
+calibrateSpeeds()
+readCalibratedSpeeds()
 
 # Prompting for user input for distance and time
 xInches = input("Enter number of inches to travel: ")
@@ -358,8 +332,7 @@ goodValue = False
 maxValue = 7.134
 
 # Calculating the inches per second
-ipsValue = float(math.ceil((float(xInches) / float(yTime)) * 100) / 100)
-print (ipsValue)
+ipsValue = (float(xInches) / float(yTime))
 
 # Checking if the entered input is possible and asking for new input if needed
 while goodValue != True:
@@ -367,14 +340,12 @@ while goodValue != True:
         print("Sorry but that request can not be completed. Please try again")
         xInches = input("Enter number of inches to travel: ")
         yTime = input("Enter time to complete set distance: ")
-        ipsValue = float(math.ceil((float(xInches) / float(yTime)) * 100) / 100)
-        print(ipsValue)
+        ipsValue = (float(xInches) / float(yTime))
     elif ipsValue < 0:
         print("Sorry but I am only supposed to move forwards, not backwards. Please try again")
         xInches = input("Enter number of inches to travel: ")
         yTime = input("Enter time to complete set distance: ")
-        ipsValue = float(math.ceil((float(xInches) / float(yTime)) * 100) / 100)
-        print(ipsValue)
+        ipsValue = (float(xInches) / float(yTime))
     else:
 	    goodValue = True
 
