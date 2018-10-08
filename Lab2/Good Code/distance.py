@@ -130,10 +130,12 @@ def ctrlC(signum, frame):
     time.sleep(3)
     exit()
 
+# Function that flips pwm values since servos are in opposite directions
 def servoFlip(speed):
 	difference = speed - 1.5
 	return 1.5 - difference
 
+# Function that translates speeds from ips to pwm
 def setSpeedsIPS(ipsLeft, ipsRight):
     # Converting inches per second into revolutions per second
     rpsLeft = float(math.ceil((ipsLeft / 8.20) * 100) / 100)
@@ -157,6 +159,7 @@ def setSpeedsIPS(ipsLeft, ipsRight):
         pwm.set_pwm(LSERVO, 0, math.floor(servoFlip(lPwmValue) / 20 * 4096))
         pwm.set_pwm(RSERVO, 0, math.floor(rPwmValue / 20 * 4096))
 
+# Function to set appropiate boundaries for front sensor
 def saturationFunction(ips):
     controlSignal = ips
     if controlSignal > 7.1:
@@ -165,7 +168,10 @@ def saturationFunction(ips):
         controlSignal = -7.1
     return controlSignal
 
+# Declaring the disared distance to the wall
 desiredDistance = 5.0
+
+# Declaring the kp value to be used
 kpValue = 1
 
 pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
@@ -174,15 +180,22 @@ time.sleep(10)
 
 
 while True:
+    # Reading in from sensor
     fDistance = fSensor.get_distance()
-    print (fDistance)
+
+    # Transforming readings to inches
     inchesDistance = fDistance * 0.0393700787
-    print (inchesDistance)
+
+    # Calculating respective error
     error = desiredDistance - inchesDistance
-    print (error)
+
+    # Computing the control signal
     controlSignal = kpValue * error
+
+    # Running control signals through saturation function
     newSignal = saturationFunction(controlSignal)
-    print (newSignal)
+
+    # Setting speed of the robot with the newly computed values
     setSpeedsIPS(newSignal, newSignal)
 
 # Stop measurement for all sensors
