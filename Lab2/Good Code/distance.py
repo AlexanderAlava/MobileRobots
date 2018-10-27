@@ -172,7 +172,7 @@ def saturationFunction(ips):
 desiredDistance = 5.0
 
 # Declaring the kp value to be used
-kpValue = 1
+kpValue = 4.0
 
 pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
 pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
