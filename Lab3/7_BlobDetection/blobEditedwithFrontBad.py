@@ -282,10 +282,10 @@ def saturationFunctionGoalFace(ips):
     #elif controlSignal < -1.0:
         #controlSignal = -1.0
     #return controlSignal
-    if controlSignal > 1.0:
-        controlSignal = 1.0
-    elif controlSignal < -1.0:
-        controlSignal = -1.0
+    if controlSignal > 0.5:
+        controlSignal = 0.5
+    elif controlSignal < -0.5:
+        controlSignal = -0.5
     return controlSignal
     
 # Function to set appropiate boundaries for front sensor
@@ -323,29 +323,43 @@ def spinOnSelfIPS(ipsLeft, ipsRight):
 
 #When in front of object move forward
 def moveToGoal():
-	# Reading in from sensor
+    # Reading in from sensor
     fDistance = fSensor.get_distance()
-
+    
     # Transforming readings to inches
     inchesDistance = fDistance * 0.0393700787
+	
+    while inchesDistance > 5.0:
+        if float(x_position) < 319.50 or float(x_position) > 320.50:
+            spinForGoal()
+	    # Reading in from sensor
+        fDistance = fSensor.get_distance()
 
-    # Calculating respective error
-    error = 5.0 - inchesDistance
+        # Transforming readings to inches
+        inchesDistance = fDistance * 0.0393700787
+
+        # Calculating respective error
+        error = 5.0 - inchesDistance
         
-    # Computing the control signal
-    controlSignal = kpValue * error
+        # Computing the control signal
+        controlSignal = kpValue * error
 
-    # Running control signals through saturation function
-    newSignal = saturationFunction(controlSignal)
+        # Running control signals through saturation function
+        newSignal = saturationFunction(controlSignal)
 
-    # Setting speed of the robot with the newly computed values
-    setSpeedsIPS(newSignal, newSignal)
+        # Setting speed of the robot with the newly computed values
+        setSpeedsIPS(newSignal, newSignal)
     
-    #pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
-    #pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
+    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
 
-def spinForGoal():	    
-    if len(keypoints) >= 1: 
+def spinForGoal():
+    pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.52 / 20 * 4096))
+    
+    if len(keypoints) >= 1 and 319.50 <= float(x_position) <= 320.50:
+        moveToGoal()
+    elif len(keypoints) >= 1:
         ### Calculating respective error
         error = 320 - x_position
 
@@ -356,11 +370,7 @@ def spinForGoal():
         newSignal = saturationFunctionGoalFace(controlSignal)
 
         ### Setting speed of the robot with the newly computed values
-        spinOnSelfIPS(newSignal, newSignal)    
-    else:
-        pwm.set_pwm(LSERVO, 0, math.floor(1.6 / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(1.6 / 20 * 4096)) 
-              
+        spinOnSelfIPS(newSignal, newSignal)          
 # Declaring the disared distance to the wall
 desiredDistance = 5.0
 
@@ -437,12 +447,8 @@ while True:
         print("y: ", y_position)
         print("size: ", circle_diameter)	   
     
-    if x_position <= 315 or x_position >= 325:
-        spinForGoal()
-    else:
-        moveToGoal() 
-    
-    #spinForGoal()
+    print("testing x: ", x_position)
+    spinForGoal()
     #pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
     #pwm.set_pwm(RSERVO, 0, math.floor(1.52 / 20 * 4096))
     
