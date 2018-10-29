@@ -275,7 +275,7 @@ def setSpeedsIPS(ipsLeft, ipsRight):
         pwm.set_pwm(RSERVO, 0, math.floor(rPwmValue / 20 * 4096))
 
 # Function to set appropiate boundaries for front sensor
-def saturationFunction(ips):
+def saturationFunctionGoalFace(ips):
     controlSignal = ips
     #if controlSignal > 1.0:
         #controlSignal = 1.0
@@ -289,14 +289,13 @@ def saturationFunction(ips):
     return controlSignal
     
 # Function to set appropiate boundaries for front sensor
-def spinSaturationFunction(ips):
+def saturationFunction(ips):
     controlSignal = ips
-    if controlSignal > 0.01:
-        pwm.set_pwm(LSERVO, 0, math.floor(1.48 / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(1.48 / 20 * 4096))
-    elif controlSignal < -0.01:
-        pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(1.52 / 20 * 4096))
+    if controlSignal > 7.1:
+        controlSignal = 7.1
+    elif controlSignal < -7.1:
+        controlSignal = -7.1
+    return controlSignal
 
 # Function that translates speeds from ips to pwm
 def spinOnSelfIPS(ipsLeft, ipsRight):
@@ -322,12 +321,41 @@ def spinOnSelfIPS(ipsLeft, ipsRight):
         pwm.set_pwm(LSERVO, 0, math.floor(servoFlip(lPwmValue) / 20 * 4096))
         pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
 
+#When in front of object move forward
+def moveToGoal():
+    # Reading in from sensor
+    fDistance = fSensor.get_distance()
+    
+    # Transforming readings to inches
+    inchesDistance = fDistance * 0.0393700787
+	
+    while inchesDistance > 5.0:
+	    # Reading in from sensor
+        fDistance = fSensor.get_distance()
+
+        # Transforming readings to inches
+        inchesDistance = fDistance * 0.0393700787
+
+        # Calculating respective error
+        error = 5.0 - inchesDistance
+        
+        # Computing the control signal
+        controlSignal = kpValue * error
+
+        # Running control signals through saturation function
+        newSignal = saturationFunction(controlSignal)
+
+        # Setting speed of the robot with the newly computed values
+        setSpeedsIPS(newSignal, newSignal)
+    
+    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
 
 # Declaring the disared distance to the wall
 desiredDistance = 5.0
 
 # Declaring the kp value to be used
-kpValue = 0.1
+kpValue = 0.9
 
 pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
 pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
@@ -398,7 +426,13 @@ while True:
         print("x: ", x_position)
         print("y: ", y_position)
         print("size: ", circle_diameter)	   
-    if len(keypoints) >= 1:
+    
+    pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.52 / 20 * 4096))
+    
+    if len(keypoints) >= 1 and 319.50 <= float(x_position) <= 320.50:
+        moveToGoal()
+    elif len(keypoints) >= 1:
         ### Calculating respective error
         error = 320 - x_position
 
@@ -406,14 +440,13 @@ while True:
         controlSignal = kpValue * error
 
         ### Running control signals through saturation function
-        newSignal = saturationFunction(controlSignal)
+        newSignal = saturationFunctionGoalFace(controlSignal)
 
         ### Setting speed of the robot with the newly computed values
         spinOnSelfIPS(newSignal, newSignal)          
-  
-    else:
-        pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(1.52 / 20 * 4096))  
+    #else:
+        #pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
+        #pwm.set_pwm(RSERVO, 0, math.floor(1.52 / 20 * 4096))  
     
     ### Calculating respective error
     #error = 320 - x_position
