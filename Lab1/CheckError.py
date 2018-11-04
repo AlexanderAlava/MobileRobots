@@ -130,8 +130,8 @@ while True:
     # Since the servos are oriented in opposite directions,
     # the robot will end up spinning in one direction.
     # Values between 1.3 and 1.7 should be used.
-    pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
-    pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(1.52) / 20 * 4096))
+    pwm.set_pwm(LSERVO, 0, math.floor(1.50 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(1.50) / 20 * 4096))
  
     time.sleep(1)
     

@@ -1,3 +1,4 @@
+
 # This program demonstrates advanced usage of the OpenCV library by 
 # using the SimpleBlobDetector feature along with camera threading.
 # The program displays two windows: one for adjusting the mask, 
@@ -316,42 +317,85 @@ def spinOnSelfIPS(ipsLeft, ipsRight):
         pwm.set_pwm(LSERVO, 0, math.floor(servoFlip(lPwmValue) / 20 * 4096))
         pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
 
-#When in front of object move forward
-def moveToGoal():
-    fDistance = fSensor.get_distance()
-   # if(circle_diameter < 125 and fDistance > 5.3):
-    sensorCount = 0
-    
-        # Reading in from sensor
-    fDistance = fSensor.get_distance()
+# Function to make a left turn when needed
+def turnLeft():
+    setSpeedsIPS(1.3, -2)
+    time.sleep(2.35)
+    setSpeedsIPS(0,0)
+    time.sleep(0.1)
+
+def wallFollow():
+     while len(keypoints) < 1:
+	    # Reading in from sensors
+        fDistance = fSensor.get_distance()
+        rDistance = rSensor.get_distance()
 
         # Transforming readings to inches
+        inchesDistanceFront = fDistance * 0.0393700787
+        inchesDistanceRight = rDistance * 0.0393700787
+
+        # Calculating respective errors
+        errorf = 5.0 - inchesDistanceFront
+        errorr = 5.0 - inchesDistanceRight
+
+        # Computing the control signals
+        controlSignalf = kpValue * errorf
+        controlSignalr = kpValue * errorr
+
+        # Running control signals through saturation functions
+        newSignalf = saturationFunction(controlSignalf)
+        newSignalr = saturationFunctionRight(controlSignalr)
+
+        # Setting speed of the robot, angular speed will be zero when moving straight
+        setSpeedsvw(linearSpeed,-newSignalr)
+
+        # Checking if there is an object approaching from the front
+        if inchesDistanceFront < 5.0:
+            # Increasing reading count
+	        sensorCount += 1
+
+            # Checking if the front small reading happens continously to avoid a fake trigger
+	        if sensorCount > 4:
+                # Turning left
+		        turnLeft()
+
+        # Clearing sensor count for continous small front readings
+        else:
+            sensorCount = 0
+
+#When in front of object move forward
+def moveToGoal():
+    sensorCount = 0
+    
+    # Reading in from sensor
+    fDistance = fSensor.get_distance()
+
+    # Transforming readings to inches
     inchesDistance = fDistance * 0.0393700787
     print("Distance from goal: ", inchesDistance)
 
-        # Calculating respective error
+    # Calculating respective error
     error = 5.0 - inchesDistance
         
-        # Computing the control signal
+    # Computing the control signal
     controlSignal = kpValue * error
 
-        # Running control signals through saturation function
+    # Running control signals through saturation function
     newSignal = saturationFunction(controlSignal)
 
-        # Setting speed of the robot with the newly computed values
+    # Setting speed of the robot with the newly computed values
     setSpeedsIPS(newSignal, newSignal)
-        # Checking if there is an object approaching from the front
+    # Checking if there is an object approaching from the front
     if inchesDistance < 5.0:
-            # Increasing reading count
+        # Increasing reading count
         sensorCount += 1
 
-            # Checking if the front small reading happens continously to avoid a fake trigger
+        # Checking if the front small reading happens continously to avoid a fake trigger
         if sensorCount > 4:
-                # Turning left
+            # Turning left
             pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
             pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
-  #  else:
-            wallFollowing()               
+                  
 def spinForGoal():	    
     if len(keypoints) >= 1: 
         ### Calculating respective error
@@ -369,18 +413,6 @@ def spinForGoal():
         pwm.set_pwm(LSERVO, 0, math.floor(1.55 / 20 * 4096))
         pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096)) 
 
-# Function to make a left turn when needed
-def turnLeft():
-    setSpeedsIPS(1.3, -2)
-    time.sleep(2.35)
-    setSpeedsIPS(0,0)
-    time.sleep(0.1)
-
-def setSpeedsvw(v, w):
-    leftSpeed1 = (v + (w*3.95))
-    rightSpeed1 = (v - (w*3.95))
-    setSpeedsIPS(-leftSpeed1, -rightSpeed1)
-    
 # Function to set appropiate boundaries for right sensor
 def saturationFunctionRight(inches):
     controlSignal = inches
@@ -391,88 +423,6 @@ def saturationFunctionRight(inches):
     elif controlSignal < -0.5:
         controlSignal = -0.5
     return controlSignal
-    
-# Function to set appropiate boundaries for front sensor
-def saturationFunctionfinal(ips):
-    controlSignal = ips
-
-    # Value of 0.5 is used to limit the range of speeds possible and was reached through trial and error
-    if controlSignal > 0.5:
-        controlSignal = 0.5
-    elif controlSignal < -0.5:
-        controlSignal = -0.5
-    return controlSignal
-
-# Function that translates speeds from ips to pwm
-def setSpeedsIPSfinal(ipsLeft, ipsRight):
-    # Converting inches per second into revolutions per second
-    rpsLeft = float(math.ceil((ipsLeft / 8.20) * 100) / 100)
-    rpsRight = float(math.ceil((ipsRight / 8.20) * 100) / 100)
-
-    # Flipping RPS values when negative in order to use the appropiate pwm values
-    if rpsLeft < 0:
-        rpsLeft = 0 - rpsLeft
-    if rpsRight < 0:
-        rpsRight = 0 - rpsRight
-
-    # Calculating pwm values from the respective dictionaries
-    lPwmValue = float(lPwmTranslation[rpsLeft])
-    rPwmValue = float(rPwmTranslation[rpsRight])
-
-    if ipsLeft < 0 and ipsRight < 0:
-        # Setting appropiate speeds to the servos when going forwards
-        pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
-    elif ipsLeft >= 0 and ipsRight >= 0:
-        # Setting apporpiate speeds to the servos when going backwards
-        pwm.set_pwm(LSERVO, 0, math.floor(servoFlip(lPwmValue) / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(rPwmValue / 20 * 4096))
-    elif ipsLeft >= 0 and ipsRight < 0:
-		# Setting apporpiate speeds to the servos when turning
-        pwm.set_pwm(LSERVO, 0, math.floor(servoFlip(lPwmValue) / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
-    
-def wallFollowing():
-	
-	
-    print("I AM ALFREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEED GAY BOI")
-	
-	# Reading in from sensors
-    fDistance = fSensor.get_distance()
-    rDistance = rSensor.get_distance()
-
-    # Transforming readings to inches
-    inchesDistanceFront = fDistance * 0.0393700787
-    inchesDistanceRight = rDistance * 0.0393700787
-
-    # Calculating respective errors
-    errorf = 5.0 - inchesDistanceFront
-    errorr = 5.0 - inchesDistanceRight
-
-    # Computing the control signals
-    controlSignalf = kpValue * errorf
-    controlSignalr = kpValue * errorr
-
-    # Running control signals through saturation functions
-    newSignalf = saturationFunctionfinal(controlSignalf)
-    newSignalr = saturationFunctionRight(controlSignalr)
-
-    # Setting speed of the robot, angular speed will be zero when moving straight
-    setSpeedsvw(linearSpeed,-newSignalr)
-
-    # Checking if there is an object approaching from the front
-    if inchesDistanceFront < 5.0:
-        # Increasing reading count
-	    sensorCount += 1
-
-        # Checking if the front small reading happens continously to avoid a fake trigger
-	    if sensorCount > 4:
-            # Turning left
-		    turnLeft()
-
-    # Clearing sensor count for continous small front readings
-    else:
-        sensorCount = 0
               
 # Declaring the disared distance to the wall
 desiredDistance = 5.0
@@ -533,10 +483,24 @@ while flagStart:
         print("y: ", y_position)
         print("size: ", circle_diameter)	   
     
-    if x_position <= 77 or x_position >= 83:
-        spinForGoal()
+    # Reading in from sensor
+    fDistance = fSensor.get_distance()
+
+    # Transforming readings to inches
+    inchesDistance = fDistance * 0.0393700787
+    
+    if inchesDistance > 5.0 and x_position > 157 and x_position < 163:
+        moveToGoal()
+    elif inchesDistance < 5.0 and circle_diameter < 125:
+        turnLeft()
+        wallFollow() 
     else:
-        moveToGoal() 
+        spinForGoal()
+        
+    #if x_position <= 157 or x_position >= 163:
+     #   spinForGoal()
+    #else:
+    #    moveToGoal() 
     
     # Check for user input
     c = cv.waitKey(1)
