@@ -365,6 +365,107 @@ def spinForGoal():
     else:
         pwm.set_pwm(LSERVO, 0, math.floor(1.55 / 20 * 4096))
         pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096)) 
+
+# Function to make a left turn when needed
+def turnLeft():
+    setSpeedsIPS(1.3, -2)
+    time.sleep(2.35)
+    setSpeedsIPS(0,0)
+    time.sleep(0.1)
+
+def setSpeedsvw(v, w):
+    leftSpeed1 = (v + (w*3.95))
+    rightSpeed1 = (v - (w*3.95))
+    setSpeedsIPS(-leftSpeed1, -rightSpeed1)
+    
+# Function to set appropiate boundaries for right sensor
+def saturationFunctionRight(inches):
+    controlSignal = inches
+
+    #Value of 0.5 is used to limit the range of speeds possible and was reached through trial and error
+    if controlSignal > 0.5:
+        controlSignal = 0.5
+    elif controlSignal < -0.5:
+        controlSignal = -0.5
+    return controlSignal
+    
+# Function to set appropiate boundaries for front sensor
+def saturationFunctionfinal(ips):
+    controlSignal = ips
+
+    # Value of 0.5 is used to limit the range of speeds possible and was reached through trial and error
+    if controlSignal > 0.5:
+        controlSignal = 0.5
+    elif controlSignal < -0.5:
+        controlSignal = -0.5
+    return controlSignal
+
+# Function that translates speeds from ips to pwm
+def setSpeedsIPSfinal(ipsLeft, ipsRight):
+    # Converting inches per second into revolutions per second
+    rpsLeft = float(math.ceil((ipsLeft / 8.20) * 100) / 100)
+    rpsRight = float(math.ceil((ipsRight / 8.20) * 100) / 100)
+
+    # Flipping RPS values when negative in order to use the appropiate pwm values
+    if rpsLeft < 0:
+        rpsLeft = 0 - rpsLeft
+    if rpsRight < 0:
+        rpsRight = 0 - rpsRight
+
+    # Calculating pwm values from the respective dictionaries
+    lPwmValue = float(lPwmTranslation[rpsLeft])
+    rPwmValue = float(rPwmTranslation[rpsRight])
+
+    if ipsLeft < 0 and ipsRight < 0:
+        # Setting appropiate speeds to the servos when going forwards
+        pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
+        pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
+    elif ipsLeft >= 0 and ipsRight >= 0:
+        # Setting apporpiate speeds to the servos when going backwards
+        pwm.set_pwm(LSERVO, 0, math.floor(servoFlip(lPwmValue) / 20 * 4096))
+        pwm.set_pwm(RSERVO, 0, math.floor(rPwmValue / 20 * 4096))
+    elif ipsLeft >= 0 and ipsRight < 0:
+		# Setting apporpiate speeds to the servos when turning
+        pwm.set_pwm(LSERVO, 0, math.floor(servoFlip(lPwmValue) / 20 * 4096))
+        pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
+    
+def wallFollowing():
+	# Reading in from sensors
+    fDistance = fSensor.get_distance()
+    rDistance = rSensor.get_distance()
+
+    # Transforming readings to inches
+    inchesDistanceFront = fDistance * 0.0393700787
+    inchesDistanceRight = rDistance * 0.0393700787
+
+    # Calculating respective errors
+    errorf = 5.0 - inchesDistanceFront
+    errorr = 5.0 - inchesDistanceRight
+
+    # Computing the control signals
+    controlSignalf = kpValue * errorf
+    controlSignalr = kpValue * errorr
+
+    # Running control signals through saturation functions
+    newSignalf = saturationFunctionfinal(controlSignalf)
+    newSignalr = saturationFunctionRight(controlSignalr)
+
+    # Setting speed of the robot, angular speed will be zero when moving straight
+    setSpeedsvw(linearSpeed,-newSignalr)
+
+    # Checking if there is an object approaching from the front
+    if inchesDistanceFront < 5.0:
+        # Increasing reading count
+	    sensorCount += 1
+
+        # Checking if the front small reading happens continously to avoid a fake trigger
+	    if sensorCount > 4:
+            # Turning left
+		    turnLeft()
+
+    # Clearing sensor count for continous small front readings
+    else:
+        sensorCount = 0
               
 # Declaring the disared distance to the wall
 desiredDistance = 5.0

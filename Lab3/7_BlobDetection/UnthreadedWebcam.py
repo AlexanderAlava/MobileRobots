@@ -5,8 +5,10 @@ import cv2 as cv
 class UnthreadedWebcam:
 	def __init__(self, src=0, name="ThreadedWebcam"):
 		self.stream = cv.VideoCapture(src)
-		self.stream.set(cv.CAP_PROP_FRAME_WIDTH, 640)
-		self.stream.set(cv.CAP_PROP_FRAME_HEIGHT, 480)
+		#self.stream.set(cv.CAP_PROP_FRAME_WIDTH, 320)
+		#self.stream.set(cv.CAP_PROP_FRAME_HEIGHT, 240)
+		self.stream.set(cv.CAP_PROP_FRAME_WIDTH, 160)
+		self.stream.set(cv.CAP_PROP_FRAME_HEIGHT, 120)
 		#self.stream.set(cv.CAP_PROP_BUFFERSIZE, 1)
 		
 		if not self.stream.isOpened():

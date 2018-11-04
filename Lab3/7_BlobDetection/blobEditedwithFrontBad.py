@@ -277,15 +277,10 @@ def setSpeedsIPS(ipsLeft, ipsRight):
 # Function to set appropiate boundaries for front sensor
 def saturationFunctionGoalFace(ips):
     controlSignal = ips
-    #if controlSignal > 1.0:
-        #controlSignal = 1.0
-    #elif controlSignal < -1.0:
-        #controlSignal = -1.0
-    #return controlSignal
-    if controlSignal > 0.5:
-        controlSignal = 0.5
-    elif controlSignal < -0.5:
-        controlSignal = -0.5
+    if controlSignal > 2.5:
+        controlSignal = 2.5
+    elif controlSignal < -2.5:
+        controlSignal = -2.5
     return controlSignal
     
 # Function to set appropiate boundaries for front sensor
@@ -330,7 +325,7 @@ def moveToGoal():
     inchesDistance = fDistance * 0.0393700787
 	
     while inchesDistance > 5.0:
-        if float(x_position) < 319.50 or float(x_position) > 320.50:
+        if float(x_position) < 157 or float(x_position) > 163:
             spinForGoal()
 	    # Reading in from sensor
         fDistance = fSensor.get_distance()
@@ -350,18 +345,18 @@ def moveToGoal():
         # Setting speed of the robot with the newly computed values
         setSpeedsIPS(newSignal, newSignal)
     
-    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
-    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
+    pwm.set_pwm(LSERVO, 0, math.floor(1.6 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.6 / 20 * 4096))
 
 def spinForGoal():
-    pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
-    pwm.set_pwm(RSERVO, 0, math.floor(1.52 / 20 * 4096))
+    pwm.set_pwm(LSERVO, 0, math.floor(1.55 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096))
     
-    if len(keypoints) >= 1 and 319.50 <= float(x_position) <= 320.50:
+    if len(keypoints) >= 1 and 77 <= float(x_position) <= 83:
         moveToGoal()
     elif len(keypoints) >= 1:
         ### Calculating respective error
-        error = 320 - x_position
+        error = 80 - x_position
 
         ### Computing the control signal
         controlSignal = kpValue * error
@@ -380,31 +375,6 @@ kpValue = 0.9
 pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
 pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
 time.sleep(10)
-
-#while True:
-    ## Reading in from sensor
-    #fDistance = fSensor.get_distance()
-
-    ## Transforming readings to inches
-    #inchesDistance = fDistance * 0.0393700787
-
-    ## Calculating respective error
-    #error = desiredDistance - inchesDistance
-
-    ## Computing the control signal
-    #controlSignal = kpValue * error
-
-    ## Running control signals through saturation function
-    #newSignal = saturationFunction(controlSignal)
-
-    ## Setting speed of the robot with the newly computed values
-    #setSpeedsIPS(newSignal, newSignal)
-
-## Stop measurement for all sensors
-#lSensor.stop_ranging()
-#fSensor.stop_ranging()
-#rSensor.stop_ranging()
-####################################################################################
 
 while True:
     # Calculate FPS
@@ -448,39 +418,7 @@ while True:
         print("size: ", circle_diameter)	   
     
     print("testing x: ", x_position)
-    spinForGoal()
-    #pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
-    #pwm.set_pwm(RSERVO, 0, math.floor(1.52 / 20 * 4096))
-    
-    #if len(keypoints) >= 1 and 319.50 <= float(x_position) <= 320.50:
-        #moveToGoal()
-    #elif len(keypoints) >= 1:
-        #### Calculating respective error
-        #error = 320 - x_position
-
-        #### Computing the control signal
-        #controlSignal = kpValue * error
-
-        #### Running control signals through saturation function
-        #newSignal = saturationFunctionGoalFace(controlSignal)
-
-        #### Setting speed of the robot with the newly computed values
-        #spinOnSelfIPS(newSignal, newSignal)          
-    #else:
-        #pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
-        #pwm.set_pwm(RSERVO, 0, math.floor(1.52 / 20 * 4096))  
-    
-    ### Calculating respective error
-    #error = 320 - x_position
-
-    ### Computing the control signal
-    #controlSignal = kpValue * error
-
-    ### Running control signals through saturation function
-    #newSignal = saturationFunction(controlSignal)
-
-    ### Setting speed of the robot with the newly computed values
-    #setSpeedsIPS(newSignal, newSignal)          
+    spinForGoal()      
     
     ## Display the frame
     ##cv.imshow(WINDOW1, mask)

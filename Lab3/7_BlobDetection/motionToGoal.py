@@ -1,6 +1,6 @@
-# This program demonstrates advanced usage of the OpenCV library by
+# This program demonstrates advanced usage of the OpenCV library by 
 # using the SimpleBlobDetector feature along with camera threading.
-# The program displays two windows: one for adjusting the mask,
+# The program displays two windows: one for adjusting the mask, 
 # and one that displays the detected blobs in the (masked) image.
 # Adjust the HSV values until blobs are detected from the camera feed.
 # There's also a params file in the same folder that can be adjusted.
@@ -92,11 +92,11 @@ if fs.isOpened():
     detector.read(fs.root())
 else:
     print("WARNING: params file not found! Creating default file.")
-
+    
     fs2 = cv.FileStorage("params.yaml", cv.FILE_STORAGE_WRITE)
     detector.write(fs2)
     fs2.release()
-
+    
 fs.release()
 
 # Create windows
@@ -256,7 +256,6 @@ def setSpeedsIPS(ipsLeft, ipsRight):
     rpsLeft = float(math.ceil((ipsLeft / 8.20) * 100) / 100)
     rpsRight = float(math.ceil((ipsRight / 8.20) * 100) / 100)
 
-    # Flipping RPS values when negative in order to use the appropiate pwm values
     if rpsLeft < 0:
         rpsLeft = 0 - rpsLeft
     if rpsRight < 0:
@@ -266,46 +265,32 @@ def setSpeedsIPS(ipsLeft, ipsRight):
     lPwmValue = float(lPwmTranslation[rpsLeft])
     rPwmValue = float(rPwmTranslation[rpsRight])
 
-    if ipsLeft < 0 and ipsRight < 0:
+    if ipsLeft < 0 or ipsRight < 0:
         # Setting appropiate speeds to the servos when going forwards
         pwm.set_pwm(LSERVO, 0, math.floor(lPwmValue / 20 * 4096))
         pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
-    elif ipsLeft >= 0 and ipsRight >= 0:
+    elif ipsLeft >= 0 or ipsRight >= 0:
         # Setting apporpiate speeds to the servos when going backwards
         pwm.set_pwm(LSERVO, 0, math.floor(servoFlip(lPwmValue) / 20 * 4096))
         pwm.set_pwm(RSERVO, 0, math.floor(rPwmValue / 20 * 4096))
-    elif ipsLeft >= 0 and ipsRight < 0:
-		# Setting apporpiate speeds to the servos when turning
-        pwm.set_pwm(LSERVO, 0, math.floor(servoFlip(lPwmValue) / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
 
 # Function to set appropiate boundaries for front sensor
 def saturationFunctionGoalFace(ips):
     controlSignal = ips
-    #if controlSignal > 1.0:
-        #controlSignal = 1.0
-    #elif controlSignal < -1.0:
-        #controlSignal = -1.0
-    #return controlSignal
     if controlSignal > 1.0:
         controlSignal = 1.0
     elif controlSignal < -1.0:
         controlSignal = -1.0
     return controlSignal
-
+    
 # Function to set appropiate boundaries for front sensor
 def saturationFunction(ips):
     controlSignal = ips
-    if controlSignal > 7.1:
-        controlSignal = 7.1
-    elif controlSignal < -7.1:
-        controlSignal = -7.1
+    if controlSignal > 5.0:
+        controlSignal = 5.0
+    elif controlSignal < -5.0:
+        controlSignal = -5.0
     return controlSignal
-
-def setSpeedsvw(v, w):
-    leftSpeed1 = (v + (w*3.95))
-    rightSpeed1 = (v - (w*3.95))
-    setSpeedsIPS(-leftSpeed1, -rightSpeed1)
 
 # Function that translates speeds from ips to pwm
 def spinOnSelfIPS(ipsLeft, ipsRight):
@@ -333,38 +318,41 @@ def spinOnSelfIPS(ipsLeft, ipsRight):
 
 #When in front of object move forward
 def moveToGoal():
-    ### Calculating respective error
-    errorc = 320 - x_position
-
-    ### Computing the control signal
-    controlSignalc = kpValue * errorc
-
-    ### Running control signals through saturation function
-    newSignalc = saturationFunctionGoalFace(controlSignalc)
-
-    # Reading in from sensors
+    sensorCount = 0
+    
+    # Reading in from sensor
     fDistance = fSensor.get_distance()
 
     # Transforming readings to inches
-    inchesDistanceFront = fDistance * 0.0393700787
+    inchesDistance = fDistance * 0.0393700787
+    print("Distance from goal: ", inchesDistance)
 
-    # Calculating respective errors
-    errorf = 5.0 - inchesDistanceFront
+    # Calculating respective error
+    error = 5.0 - inchesDistance
+        
+    # Computing the control signal
+    controlSignal = kpValue * error
 
-    # Computing the control signals
-    controlSignalf = kpValue * errorf
+    # Running control signals through saturation function
+    newSignal = saturationFunction(controlSignal)
 
-    # Running control signals through saturation functions
-    newSignalf = saturationFunction(controlSignalf)
+    # Setting speed of the robot with the newly computed values
+    setSpeedsIPS(newSignal, newSignal)
+    # Checking if there is an object approaching from the front
+    if inchesDistance < 5.0:
+        # Increasing reading count
+        sensorCount += 1
 
-    # Setting speed of the robot, angular speed will be zero when moving straight
-    setSpeedsvw(linearSpeed,-newSignalc)
-
-
-def spinForGoal():
-    if len(keypoints) >= 1:
+        # Checking if the front small reading happens continously to avoid a fake trigger
+        if sensorCount > 4:
+            # Turning left
+            pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
+            pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
+                  
+def spinForGoal():	    
+    if len(keypoints) >= 1: 
         ### Calculating respective error
-        error = 320 - x_position
+        error = 80 - x_position
 
         ### Computing the control signal
         controlSignal = kpValue * error
@@ -373,11 +361,11 @@ def spinForGoal():
         newSignal = saturationFunctionGoalFace(controlSignal)
 
         ### Setting speed of the robot with the newly computed values
-        spinOnSelfIPS(newSignal, newSignal)
+        spinOnSelfIPS(newSignal, newSignal)    
     else:
-        pwm.set_pwm(LSERVO, 0, math.floor(1.6 / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(1.6 / 20 * 4096))
-
+        pwm.set_pwm(LSERVO, 0, math.floor(1.55 / 20 * 4096))
+        pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096)) 
+              
 # Declaring the disared distance to the wall
 desiredDistance = 5.0
 
@@ -386,34 +374,17 @@ kpValue = 0.9
 
 pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
 pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
-time.sleep(10)
 
-#while True:
-    ## Reading in from sensor
-    #fDistance = fSensor.get_distance()
+# Waiting for user to enter the required key in order to start the movement
+flagStart = False
+startInput = input("Press 'm' to start robot wall following.")
+if startInput == "m":
+	flagStart = True
+else:
+	print("Exiting program, re-run file wall following.")
+	exit()
 
-    ## Transforming readings to inches
-    #inchesDistance = fDistance * 0.0393700787
-
-    ## Calculating respective error
-    #error = desiredDistance - inchesDistance
-
-    ## Computing the control signal
-    #controlSignal = kpValue * error
-
-    ## Running control signals through saturation function
-    #newSignal = saturationFunction(controlSignal)
-
-    ## Setting speed of the robot with the newly computed values
-    #setSpeedsIPS(newSignal, newSignal)
-
-## Stop measurement for all sensors
-#lSensor.stop_ranging()
-#fSensor.stop_ranging()
-#rSensor.stop_ranging()
-####################################################################################
-
-while True:
+while flagStart:
     # Calculate FPS
     now = time.time()
     fps = (fps*FPS_SMOOTHING + (1/(now - prev))*(1.0 - FPS_SMOOTHING))
@@ -421,26 +392,26 @@ while True:
 
     # Get a frame
     frame = camera.read()
-
-    # Blob detection works better in the HSV color space
+    
+    # Blob detection works better in the HSV color space 
     # (than the RGB color space) so the frame is converted to HSV.
     frame_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-
+    
     # Create a mask using the given HSV range
     mask = cv.inRange(frame_hsv, (minH, minS, minV), (maxH, maxS, maxV))
-
+    
     # Run the SimpleBlobDetector on the mask.
     # The results are stored in a vector of 'KeyPoint' objects,
     # which describe the location and size of the blobs.
     keypoints = detector.detect(mask)
-
+		
     # For each detected blob, draw a circle on the frame
     frame_with_keypoints = cv.drawKeypoints(frame, keypoints, None, color = (0, 255, 0), flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-
+    
     # Write text onto the frame
     cv.putText(frame_with_keypoints, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
     cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-
+    
     #Print FPS on screen and number of blobs.
     print("Camera FPS: ", fps)
     print("Number of blobs detected: ", len(keypoints))
@@ -448,55 +419,17 @@ while True:
         x_position = keypoint.pt[0]
         y_position = keypoint.pt[1]
         circle_diameter = keypoint.size # diameter of circle
-        keypoint_angle = keypoint.angle # angle
-
+        keypoint_angle = keypoint.angle # angle 
+        
         print("x: ", x_position)
         print("y: ", y_position)
-        print("size: ", circle_diameter)
-
-    if x_position <= 315 or x_position >= 325:
+        print("size: ", circle_diameter)	   
+    
+    if x_position <= 77 or x_position >= 83:
         spinForGoal()
     else:
-        moveToGoal()
-
-    #spinForGoal()
-    #pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
-    #pwm.set_pwm(RSERVO, 0, math.floor(1.52 / 20 * 4096))
-
-    #if len(keypoints) >= 1 and 319.50 <= float(x_position) <= 320.50:
-        #moveToGoal()
-    #elif len(keypoints) >= 1:
-        #### Calculating respective error
-        #error = 320 - x_position
-
-        #### Computing the control signal
-        #controlSignal = kpValue * error
-
-        #### Running control signals through saturation function
-        #newSignal = saturationFunctionGoalFace(controlSignal)
-
-        #### Setting speed of the robot with the newly computed values
-        #spinOnSelfIPS(newSignal, newSignal)
-    #else:
-        #pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
-        #pwm.set_pwm(RSERVO, 0, math.floor(1.52 / 20 * 4096))
-
-    ### Calculating respective error
-    #error = 320 - x_position
-
-    ### Computing the control signal
-    #controlSignal = kpValue * error
-
-    ### Running control signals through saturation function
-    #newSignal = saturationFunction(controlSignal)
-
-    ### Setting speed of the robot with the newly computed values
-    #setSpeedsIPS(newSignal, newSignal)
-
-    ## Display the frame
-    ##cv.imshow(WINDOW1, mask)
-    ##cv.imshow(WINDOW2, frame_with_keypoints)
-
+        moveToGoal() 
+    
     # Check for user input
     c = cv.waitKey(1)
     if c == 27 or c == ord('q') or c == ord('Q'): # Esc or Q
