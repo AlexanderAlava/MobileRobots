@@ -1,6 +1,6 @@
-# This program demonstrates advanced usage of the OpenCV library by 
+# This program demonstrates advanced usage of the OpenCV library by
 # using the SimpleBlobDetector feature along with camera threading.
-# The program displays two windows: one for adjusting the mask, 
+# The program displays two windows: one for adjusting the mask,
 # and one that displays the detected blobs in the (masked) image.
 # Adjust the HSV values until blobs are detected from the camera feed.
 # There's also a params file in the same folder that can be adjusted.
@@ -92,11 +92,11 @@ if fs.isOpened():
     detector.read(fs.root())
 else:
     print("WARNING: params file not found! Creating default file.")
-    
+
     fs2 = cv.FileStorage("params.yaml", cv.FILE_STORAGE_WRITE)
     detector.write(fs2)
     fs2.release()
-    
+
 fs.release()
 
 # Create windows
@@ -187,7 +187,6 @@ rSpeed = 0
 currentTime = 0
 lRevolutions = 0
 rRevolutions = 0
-sensorCount = 0
 startTime = time.time()
 
 # Pins that the sensors are connected to
@@ -278,12 +277,12 @@ def setSpeedsIPS(ipsLeft, ipsRight):
 # Function to set appropiate boundaries for front sensor
 def saturationFunctionGoalFace(ips):
     controlSignal = ips
-    if controlSignal > 0.8:
-        controlSignal = 0.8
-    elif controlSignal < -0.8:
-        controlSignal = -0.8
+    if controlSignal > 1.0:
+        controlSignal = 1.0
+    elif controlSignal < -1.0:
+        controlSignal = -1.0
     return controlSignal
-    
+
 # Function to set appropiate boundaries for front sensor
 def saturationFunction(ips):
     controlSignal = ips
@@ -319,9 +318,51 @@ def spinOnSelfIPS(ipsLeft, ipsRight):
 
 #When in front of object move forward
 def moveToGoal():
+    fps, prev = 0.0, 0.0
     
+    # Calculate FPS
+    now = time.time()
+    fps = (fps*FPS_SMOOTHING + (1/(now - prev))*(1.0 - FPS_SMOOTHING))
+    prev = now
+
+    # Get a frame
+    frame = camera.read()
+
+    # Blob detection works better in the HSV color space
+    # (than the RGB color space) so the frame is converted to HSV.
+    frame_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+ 
+    # Create a mask using the given HSV range
+    mask = cv.inRange(frame_hsv, (minH, minS, minV), (maxH, maxS, maxV))
+
+    # Run the SimpleBlobDetector on the mask.
+    # The results are stored in a vector of 'KeyPoint' objects,
+    # which describe the location and size of the blobs.
+    keypoints = detector.detect(mask)
+
+    # For each detected blob, draw a circle on the frame
+    frame_with_keypoints = cv.drawKeypoints(frame, keypoints, None, color = (0, 255, 0), flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+    # Write text onto the frame
+    cv.putText(frame_with_keypoints, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))  
+    
+    
+    print("Number of blobs detected: ", len(keypoints))
+    for keypoint in keypoints:
+        x_position = keypoint.pt[0]
+        y_position = keypoint.pt[1]
+        circle_diameter = keypoint.size # diameter of circle
+        keypoint_angle = keypoint.angle # angle
+          
+        print("x: ", x_position)
+        print("y: ", y_position)
+        print("size: ", circle_diameter)
+        print("front distance in inches: ", finches)
+    
+    print("MOVE TO GOOOOAALLLL")
     sensorCount = 0
-    
+
     # Reading in from sensor
     fDistance = fSensor.get_distance()
 
@@ -331,7 +372,7 @@ def moveToGoal():
 
     # Calculating respective error
     error = 5.0 - inchesDistance
-        
+
     # Computing the control signal
     controlSignal = kpValue * error
 
@@ -341,19 +382,20 @@ def moveToGoal():
     # Setting speed of the robot with the newly computed values
     setSpeedsIPS(newSignal, newSignal)
     # Checking if there is an object approaching from the front
-    if inchesDistance < 6.0:
-        # Increasing reading count
-        sensorCount += 1
+    if inchesDistance < 6:
+        if circle_diameter >= 260:
+            print("STOPPPPPPPPPPPPPPPPPPPPPPPPPP I FOUND THE GOALLLLLLLLLLLLLLLLLLL")
+            pwm.set_pwm(LSERVO, 0, math.floor(1.50 / 20 * 4096))
+            pwm.set_pwm(RSERVO, 0, math.floor(1.50 / 20 * 4096))
+            exit()
+        print("LEFTTTTTT TURNNNNNNN")
+        turnLeft()
+        time.sleep(0.25)
+        wallFollow()
 
-        # Checking if the front small reading happens continously to avoid a fake trigger
-        if sensorCount == 1:
-            print("WE REACHED THE GOAL! STOP!")
-            pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
-            pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
-            time.sleep(0.2)
-                  
-def spinForGoal():	    
-    if len(keypoints) >= 1: 
+def spinForGoal():  
+    if len(keypoints) >= 1:
+        print("SPIN FOR GOALLLLLLLL")
         ### Calculating respective error
         error = 160 - x_position
 
@@ -364,11 +406,173 @@ def spinForGoal():
         newSignal = saturationFunctionGoalFace(controlSignal)
 
         ### Setting speed of the robot with the newly computed values
-        spinOnSelfIPS(newSignal, newSignal)    
+        spinOnSelfIPS(newSignal, newSignal)
     else:
+        print("WHERE IS THE GOAL????????")
         pwm.set_pwm(LSERVO, 0, math.floor(1.55 / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096)) 
-              
+        pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096))
+
+# Function to set appropiate boundaries for front sensor
+def saturationFunctionWallFollow(ips):
+    controlSignal = ips
+
+    # Value of 0.5 is used to limit the range of speeds possible and was reached through trial and error
+    if controlSignal > 0.5:
+        controlSignal = 0.5
+    elif controlSignal < -0.5:
+        controlSignal = -0.5
+    return controlSignal
+
+# Function to set appropiate boundaries for right sensor
+def saturationFunctionRight(inches):
+    controlSignal = inches
+
+    #Value of 0.5 is used to limit the range of speeds possible and was reached through trial and error
+    if controlSignal > 0.5:
+        controlSignal = 0.5
+    elif controlSignal < -0.5:
+        controlSignal = -0.5
+    return controlSignal
+
+def setSpeedsvw(v, w):
+    leftSpeed1 = (v + (w*3.95))
+    rightSpeed1 = (v - (w*3.95))
+    setSpeedsIPS(-leftSpeed1, -rightSpeed1)
+
+def wallFollow():
+    sensorCount = 0
+    
+    fps, prev = 0.0, 0.0
+    
+    # Calculate FPS
+    now = time.time()
+    fps = (fps*FPS_SMOOTHING + (1/(now - prev))*(1.0 - FPS_SMOOTHING))
+    prev = now
+
+    # Get a frame
+    frame = camera.read()
+
+    # Blob detection works better in the HSV color space
+    # (than the RGB color space) so the frame is converted to HSV.
+    frame_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+ 
+    # Create a mask using the given HSV range
+    mask = cv.inRange(frame_hsv, (minH, minS, minV), (maxH, maxS, maxV))
+
+    # Run the SimpleBlobDetector on the mask.
+    # The results are stored in a vector of 'KeyPoint' objects,
+    # which describe the location and size of the blobs.
+    keypoints = detector.detect(mask)
+
+    # For each detected blob, draw a circle on the frame
+    frame_with_keypoints = cv.drawKeypoints(frame, keypoints, None, color = (0, 255, 0), flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+    # Write text onto the frame
+    cv.putText(frame_with_keypoints, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))  
+    
+    while len(keypoints) < 1:
+        print("EEEEEEEL PIPIIIIII JOOOOOONOEEEEEEESS WAAAALL FOLLOOOOW")
+        
+        # Calculate FPS
+        now = time.time()
+        fps = (fps*FPS_SMOOTHING + (1/(now - prev))*(1.0 - FPS_SMOOTHING))
+        prev = now
+
+        # Get a frame
+        frame = camera.read()
+
+        # Blob detection works better in the HSV color space
+        # (than the RGB color space) so the frame is converted to HSV.
+        frame_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+ 
+        # Create a mask using the given HSV range
+        mask = cv.inRange(frame_hsv, (minH, minS, minV), (maxH, maxS, maxV))
+
+        # Run the SimpleBlobDetector on the mask.
+        # The results are stored in a vector of 'KeyPoint' objects,
+        # which describe the location and size of the blobs.
+        keypoints = detector.detect(mask)
+
+        # For each detected blob, draw a circle on the frame
+        frame_with_keypoints = cv.drawKeypoints(frame, keypoints, None, color = (0, 255, 0), flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+        # Write text onto the frame
+        cv.putText(frame_with_keypoints, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+        cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))  
+        
+        print("Number of blobs detected: ", len(keypoints))
+        for keypoint in keypoints:
+            x_position = keypoint.pt[0]
+            y_position = keypoint.pt[1]
+            circle_diameter = keypoint.size # diameter of circle
+            keypoint_angle = keypoint.angle # angle
+            
+            print("x: ", x_position)
+            print("y: ", y_position)
+            print("size: ", circle_diameter)
+            print("front distance in inches: ", finches)
+        
+	    # Reading in from sensors
+        fDistance = fSensor.get_distance()
+        rDistance = rSensor.get_distance()
+
+        # Transforming readings to inches
+        inchesDistanceFront = fDistance * 0.0393700787
+        inchesDistanceRight = rDistance * 0.0393700787
+
+        # Calculating respective errors
+        errorf = 5.0 - inchesDistanceFront
+        errorr = 5.0 - inchesDistanceRight
+
+        # Computing the control signals
+        controlSignalf = kpValue * errorf
+        controlSignalr = kpValue * errorr
+
+        # Running control signals through saturation functions
+        newSignalf = saturationFunctionWallFollow(controlSignalf)
+        newSignalr = saturationFunctionRight(controlSignalr)
+
+        # Setting speed of the robot, angular speed will be zero when moving straight
+        setSpeedsvw(5,-newSignalr)
+
+        # Checking if there is an object approaching from the front
+        if inchesDistanceFront < 5.0:
+            # Increasing reading count
+	        sensorCount += 1
+
+            # Checking if the front small reading happens continously to avoid a fake trigger
+	        if sensorCount > 4:
+                # Turning left
+		        turnLeft()
+
+    # Clearing sensor count for continous small front readings
+    else:
+        sensorCount = 0
+
+# Function to make a left turn when needed
+def turnLeft():
+	# Reading in from sensor
+    fDistance = fSensor.get_distance()
+
+    # Transforming readings to inches
+    inchesDistance = fDistance * 0.0393700787
+	
+    while inchesDistance < 10:
+        pwm.set_pwm(LSERVO, 0, math.floor(1.44 / 20 * 4096))
+        pwm.set_pwm(RSERVO, 0, math.floor(1.41 / 20 * 4096))
+        #setSpeedsIPS(1.3, -2)
+        
+        # Reading in from sensor
+        fDistance = fSensor.get_distance()
+
+        # Transforming readings to inches
+        inchesDistance = fDistance * 0.0393700787
+    time.sleep(0.25)
+    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
+  
+
 # Declaring the disared distance to the wall
 desiredDistance = 5.0
 
@@ -395,26 +599,26 @@ while flagStart:
 
     # Get a frame
     frame = camera.read()
-    
-    # Blob detection works better in the HSV color space 
+
+    # Blob detection works better in the HSV color space
     # (than the RGB color space) so the frame is converted to HSV.
     frame_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-    
+
     # Create a mask using the given HSV range
     mask = cv.inRange(frame_hsv, (minH, minS, minV), (maxH, maxS, maxV))
-    
+
     # Run the SimpleBlobDetector on the mask.
     # The results are stored in a vector of 'KeyPoint' objects,
     # which describe the location and size of the blobs.
     keypoints = detector.detect(mask)
-		
+
     # For each detected blob, draw a circle on the frame
     frame_with_keypoints = cv.drawKeypoints(frame, keypoints, None, color = (0, 255, 0), flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    
+
     # Write text onto the frame
     cv.putText(frame_with_keypoints, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
     cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-    
+
     #Print FPS on screen and number of blobs.
     print("Camera FPS: ", fps)
     print("Number of blobs detected: ", len(keypoints))
@@ -422,17 +626,20 @@ while flagStart:
         x_position = keypoint.pt[0]
         y_position = keypoint.pt[1]
         circle_diameter = keypoint.size # diameter of circle
-        keypoint_angle = keypoint.angle # angle 
-        
+        keypoint_angle = keypoint.angle # angle
+        fDistance = fSensor.get_distance()
+        finches = fDistance * 0.0393700787
+		
         print("x: ", x_position)
         print("y: ", y_position)
-        print("size: ", circle_diameter)	   
-    
-    if x_position <= 155 or x_position >= 165:
+        print("size: ", circle_diameter)
+        print("front distance in inches: ", finches)
+
+    if x_position <= 150 or x_position >= 170:
         spinForGoal()
-    else:
-        moveToGoal() 
-    
+    elif (x_position >= 150 and x_position <= 170):
+        moveToGoal()
+
     # Check for user input
     c = cv.waitKey(1)
     if c == 27 or c == ord('q') or c == ord('Q'): # Esc or Q
