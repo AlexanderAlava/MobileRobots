@@ -318,8 +318,9 @@ def spinOnSelfIPS(ipsLeft, ipsRight):
 
 #When in front of object move forward
 def moveToGoal():
+	print("I AM MOVING TO GOAL GAY BOI")
     fDistance = fSensor.get_distance()
-   # if(circle_diameter < 125 and fDistance > 5.3):
+    # if(circle_diameter < 125 and fDistance > 5.3):
     sensorCount = 0
     
         # Reading in from sensor
@@ -352,7 +353,8 @@ def moveToGoal():
             pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
   #  else:
             wallFollowing()               
-def spinForGoal():	    
+def spinForGoal():
+	print("I AM SPINNING FOR GOAL GAY BOI")	    
     if len(keypoints) >= 1: 
         ### Calculating respective error
         error = 80 - x_position
@@ -433,9 +435,7 @@ def setSpeedsIPSfinal(ipsLeft, ipsRight):
         pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(rPwmValue) / 20 * 4096))
     
 def wallFollowing():
-	
-	
-    print("I AM ALFREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEED GAY BOI")
+    print("I AM WALL FOLLOWING GAY BOI")
 	
 	# Reading in from sensors
     fDistance = fSensor.get_distance()
@@ -492,6 +492,12 @@ else:
 	print("Exiting program, re-run file wall following.")
 	exit()
 
+flagWallFolllowing = False
+flagWallSearching = False
+flagLockOnWall = False
+flagTurnToGoal = False
+flagFoundGoal = False
+
 while flagStart:
     # Calculate FPS
     now = time.time()
@@ -529,14 +535,28 @@ while flagStart:
         circle_diameter = keypoint.size # diameter of circle
         keypoint_angle = keypoint.angle # angle 
         
-        print("x: ", x_position)
-        print("y: ", y_position)
-        print("size: ", circle_diameter)	   
+        #print("x: ", x_position)
+        #print("y: ", y_position)
+        #print("size: ", circle_diameter)	   
     
-    if x_position <= 77 or x_position >= 83:
-        spinForGoal()
-    else:
-        moveToGoal() 
+    #if x_position <= 77 or x_position >= 83:
+        #spinForGoal()
+    #else:
+        #moveToGoal() 
+   
+    #Spin on itself if not wall following and if no turn on goal detected
+    if(flagWallFolllowing == False and flagTurnToGoal == False):
+		spinForGoal()
+	#Break out of wall-following when the goal has been seen
+	elif(flagWallFolllowing == False and flagTurnToGoal == True):
+		setSpeedsIPS(3, -3)	
+    #Apporach goal if there is no opsticale in the way
+    elif(flagFoundGoal == True and fDistance > 135):
+		flagWallFolllowing = False
+		moveToGoal()
+    
+    
+    
     
     # Check for user input
     c = cv.waitKey(1)
