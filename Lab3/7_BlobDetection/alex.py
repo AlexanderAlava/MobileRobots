@@ -352,7 +352,7 @@ def wallFollow():
         newSignalr = saturationFunctionRight(controlSignalr)
 
         # Setting speed of the robot, angular speed will be zero when moving straight
-        setSpeedsvw(linearSpeed,-newSignalr)
+        setSpeedsvw(5.0,-newSignalr)
 
         # Checking if there is an object approaching from the front
         if inchesDistanceFront < 5.0:
@@ -494,11 +494,11 @@ while flagStart:
     # Transforming readings to inches
     inchesDistance = fDistance * 0.0393700787
 
-    if inchesDistance > 5.0: #and x_position > 157 and x_position < 163:
+    if inchesDistance > 5.5: #and x_position > 157 and x_position < 163:
         moveToGoal()
-    elif inchesDistance < 5.0 and circle_diameter < 125:
+    elif inchesDistance < 5.5 and circle_diameter < 125:
         turnLeft()
-        wallFollow()
+        #wallFollow()
     #else:
     #    spinForGoal()
 
