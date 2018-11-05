@@ -293,6 +293,11 @@ def saturationFunction(ips):
         controlSignal = -5.0
     return controlSignal
 
+def setSpeedsvw(v, w):
+    leftSpeed1 = (v + (w*3.95))
+    rightSpeed1 = (v - (w*3.95))
+    setSpeedsIPS(-leftSpeed1, -rightSpeed1)
+
 # Function that translates speeds from ips to pwm
 def spinOnSelfIPS(ipsLeft, ipsRight):
     # Converting inches per second into revolutions per second
@@ -489,7 +494,7 @@ while flagStart:
     # Transforming readings to inches
     inchesDistance = fDistance * 0.0393700787
 
-    if inchesDistance > 5.0 and x_position > 157 and x_position < 163:
+    if inchesDistance > 5.0 #and x_position > 157 and x_position < 163:
         moveToGoal()
     elif inchesDistance < 5.0 and circle_diameter < 125:
         turnLeft()
