@@ -559,8 +559,8 @@ def turnLeft():
     inchesDistance = fDistance * 0.0393700787
 	
     while inchesDistance < 10:
-        pwm.set_pwm(LSERVO, 0, math.floor(1.43 / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(1.43 / 20 * 4096))
+        pwm.set_pwm(LSERVO, 0, math.floor(1.51 / 20 * 4096))
+        pwm.set_pwm(RSERVO, 0, math.floor(1.42 / 20 * 4096))
         #setSpeedsIPS(1.3, -2)
         
         # Reading in from sensor
@@ -568,7 +568,7 @@ def turnLeft():
 
         # Transforming readings to inches
         inchesDistance = fDistance * 0.0393700787
-    time.sleep(0.25)
+    time.sleep(0.5)
     pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
   

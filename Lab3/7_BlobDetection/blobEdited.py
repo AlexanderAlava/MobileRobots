@@ -282,10 +282,10 @@ def saturationFunction(ips):
     #elif controlSignal < -1.0:
         #controlSignal = -1.0
     #return controlSignal
-    if controlSignal > 0.5:
-        controlSignal = 0.5
-    elif controlSignal < -0.5:
-        controlSignal = -0.5
+    if controlSignal > 0.8:
+        controlSignal = 0.8
+    elif controlSignal < -0.8:
+        controlSignal = -0.8
     return controlSignal
     
 # Function to set appropiate boundaries for front sensor
@@ -327,36 +327,13 @@ def spinOnSelfIPS(ipsLeft, ipsRight):
 desiredDistance = 5.0
 
 # Declaring the kp value to be used
-kpValue = 0.1
+kpValue = 0.9
 
 pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
 pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
-time.sleep(10)
+time.sleep(3)
 
-#while True:
-    ## Reading in from sensor
-    #fDistance = fSensor.get_distance()
-
-    ## Transforming readings to inches
-    #inchesDistance = fDistance * 0.0393700787
-
-    ## Calculating respective error
-    #error = desiredDistance - inchesDistance
-
-    ## Computing the control signal
-    #controlSignal = kpValue * error
-
-    ## Running control signals through saturation function
-    #newSignal = saturationFunction(controlSignal)
-
-    ## Setting speed of the robot with the newly computed values
-    #setSpeedsIPS(newSignal, newSignal)
-
-## Stop measurement for all sensors
-#lSensor.stop_ranging()
-#fSensor.stop_ranging()
-#rSensor.stop_ranging()
-####################################################################################
+sensorCount = 0
 
 while True:
     # Calculate FPS
@@ -400,7 +377,7 @@ while True:
         print("size: ", circle_diameter)	   
     if len(keypoints) >= 1:
         ### Calculating respective error
-        error = 320 - x_position
+        error = 160 - x_position
 
         ### Computing the control signal
         controlSignal = kpValue * error
@@ -409,27 +386,19 @@ while True:
         newSignal = saturationFunction(controlSignal)
 
         ### Setting speed of the robot with the newly computed values
-        spinOnSelfIPS(newSignal, newSignal)          
-  
+        spinOnSelfIPS(newSignal, newSignal)  
+        
+        if x_position >= 155 and x_position <= 165:
+            sensorCount =+ 1
+            print("INCREASE BY ONE")
+            print("SENSOR COUNT: ", sensorCount)
+        if sensorCount == 1:
+            pwm.set_pwm(LSERVO, 0, math.floor(1.50 / 20 * 4096))
+            pwm.set_pwm(RSERVO, 0, math.floor(1.50 / 20 * 4096))          
+              
     else:
-        pwm.set_pwm(LSERVO, 0, math.floor(1.52 / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(1.52 / 20 * 4096))  
-    
-    ### Calculating respective error
-    #error = 320 - x_position
-
-    ### Computing the control signal
-    #controlSignal = kpValue * error
-
-    ### Running control signals through saturation function
-    #newSignal = saturationFunction(controlSignal)
-
-    ### Setting speed of the robot with the newly computed values
-    #setSpeedsIPS(newSignal, newSignal)          
-    
-    ## Display the frame
-    ##cv.imshow(WINDOW1, mask)
-    ##cv.imshow(WINDOW2, frame_with_keypoints)
+        pwm.set_pwm(LSERVO, 0, math.floor(1.55 / 20 * 4096))
+        pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096))  
     
     # Check for user input
     c = cv.waitKey(1)
