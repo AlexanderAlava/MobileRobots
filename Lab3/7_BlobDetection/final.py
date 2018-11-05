@@ -321,35 +321,34 @@ def moveToGoal():
     print("I AM MOVING TO GOAL GAY BOI")
     fDistance = fSensor.get_distance()
     
-    #if(circle_diameter < 125 and fDistance > 5.3):
     sensorCount = 0
     
-        # Reading in from sensor
+    # Reading in from sensor
     fDistance = fSensor.get_distance()
 
-        # Transforming readings to inches
+    # Transforming readings to inches
     inchesDistance = fDistance * 0.0393700787
     print("Distance from goal: ", inchesDistance)
 
-        # Calculating respective error
+    # Calculating respective error
     error = 5.0 - inchesDistance
         
-        # Computing the control signal
+    # Computing the control signal
     controlSignal = kpValue * error
 
-        # Running control signals through saturation function
+    # Running control signals through saturation function
     newSignal = saturationFunction(controlSignal)
 
-        # Setting speed of the robot with the newly computed values
+    # Setting speed of the robot with the newly computed values
     setSpeedsIPS(newSignal, newSignal)
-        # Checking if there is an object approaching from the front
+    # Checking if there is an object approaching from the front
     if inchesDistance < 5.0:
-            # Increasing reading count
+        # Increasing reading count
         sensorCount += 1
 
-            # Checking if the front small reading happens continously to avoid a fake trigger
+        # Checking if the front small reading happens continously to avoid a fake trigger
         if sensorCount > 4:
-                # Turning left
+            # Turning left
             pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
             pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
   #  else:
@@ -367,7 +366,9 @@ def spinForGoal():
         newSignal = saturationFunctionGoalFace(controlSignal)
 
         ### Setting speed of the robot with the newly computed values
-        spinOnSelfIPS(newSignal, newSignal)    
+        spinOnSelfIPS(newSignal, newSignal)
+    if (x_position >= 77 and x_position <= 83):
+        flagFoundGoal = True        
     else:
         pwm.set_pwm(LSERVO, 0, math.floor(1.55 / 20 * 4096))
         pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096)) 
@@ -557,6 +558,7 @@ while flagStart:
 	#Apporach goal if there is no opsticale in the way
     elif(flagFoundGoal == True and fDistance > 135):
         flagWallFollowing = False
+        flagTurnToGoal = True
         moveToGoal()
 	
 	#Wall following code(maintaines distance from wall until goal appears)
