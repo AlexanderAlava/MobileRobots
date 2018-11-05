@@ -318,9 +318,10 @@ def spinOnSelfIPS(ipsLeft, ipsRight):
 
 #When in front of object move forward
 def moveToGoal():
-	print("I AM MOVING TO GOAL GAY BOI")
+    print("I AM MOVING TO GOAL GAY BOI")
     fDistance = fSensor.get_distance()
-    # if(circle_diameter < 125 and fDistance > 5.3):
+    
+    #if(circle_diameter < 125 and fDistance > 5.3):
     sensorCount = 0
     
         # Reading in from sensor
@@ -354,7 +355,7 @@ def moveToGoal():
   #  else:
             wallFollowing()               
 def spinForGoal():
-	print("I AM SPINNING FOR GOAL GAY BOI")	    
+    print("I AM SPINNING FOR GOAL GAY BOI")	    
     if len(keypoints) >= 1: 
         ### Calculating respective error
         error = 80 - x_position
@@ -546,28 +547,28 @@ while flagStart:
    
     #Spin on itself if not wall following and if no turn on goal detected
     if(flagWallFollowing == False and flagTurnToGoal == False):
-		spinForGoal()
-		flagTurnToGoal == False
+        spinForGoal()
+        flagTurnToGoal == False
 	
 	#Break out of wall-following when the goal has been seen
-	elif(flagWallFollowing == False and flagTurnToGoal == True):
-		setSpeedsIPS(3, -3)	
+    elif(flagWallFollowing == False and flagTurnToGoal == True):
+        setSpeedsIPS(3, -3)	
     
 	#Apporach goal if there is no opsticale in the way
     elif(flagFoundGoal == True and fDistance > 135):
-		flagWallFollowing = False
-		moveToGoal()
+        flagWallFollowing = False
+        moveToGoal()
 	
 	#Wall following code(maintaines distance from wall until goal appears)
-	if(flagWallFollowing == True):
-	    wallFollowing()
-		turnDirection == True
+    if(flagWallFollowing == True):
+        wallFollowing()
+        turnDirection == True
     
 	#Stop robot once goal has been found
-	if(flagFoundGoal == True and circle_diameter > 135 and fDistance < 140):
-	    while(fDistance < 160):
-		    fDistance = fSensor.get_distance()
-			time.sleep(0.2)
+    if(flagFoundGoal == True and circle_diameter > 135 and fDistance < 140):
+        while(fDistance < 160):
+            fDistance = fSensor.get_distance()
+            time.sleep(0.2)
 			
     # Check for user input
     c = cv.waitKey(1)
