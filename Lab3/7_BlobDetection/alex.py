@@ -391,15 +391,15 @@ def moveToGoal():
     # Setting speed of the robot with the newly computed values
     setSpeedsIPS(newSignal, newSignal)
     # Checking if there is an object approaching from the front
-    if inchesDistance < 5.0:
+    #if inchesDistance < 5.0:
         # Increasing reading count
-        sensorCount += 1
+    #    sensorCount += 1
 
         # Checking if the front small reading happens continously to avoid a fake trigger
-        if sensorCount > 4:
+    #    if sensorCount > 4:
             # Turning left
-            pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
-            pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
+    #        pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
+    #        pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
 
 def spinForGoal():
     if len(keypoints) >= 1:
@@ -496,7 +496,7 @@ while flagStart:
 
     if inchesDistance > 5.5: #and x_position > 157 and x_position < 163:
         moveToGoal()
-    elif inchesDistance < 5.5 and circle_diameter < 125:
+    elif inchesDistance <= 5.5 #and circle_diameter < 125:
         turnLeft()
         #wallFollow()
     #else:
