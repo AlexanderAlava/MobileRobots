@@ -1,7 +1,7 @@
 
-# This program demonstrates advanced usage of the OpenCV library by 
+# This program demonstrates advanced usage of the OpenCV library by
 # using the SimpleBlobDetector feature along with camera threading.
-# The program displays two windows: one for adjusting the mask, 
+# The program displays two windows: one for adjusting the mask,
 # and one that displays the detected blobs in the (masked) image.
 # Adjust the HSV values until blobs are detected from the camera feed.
 # There's also a params file in the same folder that can be adjusted.
@@ -93,11 +93,11 @@ if fs.isOpened():
     detector.read(fs.root())
 else:
     print("WARNING: params file not found! Creating default file.")
-    
+
     fs2 = cv.FileStorage("params.yaml", cv.FILE_STORAGE_WRITE)
     detector.write(fs2)
     fs2.release()
-    
+
 fs.release()
 
 # Create windows
@@ -283,7 +283,7 @@ def saturationFunctionGoalFace(ips):
     elif controlSignal < -1.0:
         controlSignal = -1.0
     return controlSignal
-    
+
 # Function to set appropiate boundaries for front sensor
 def saturationFunction(ips):
     controlSignal = ips
@@ -366,7 +366,7 @@ def wallFollow():
 #When in front of object move forward
 def moveToGoal():
     sensorCount = 0
-    
+
     # Reading in from sensor
     fDistance = fSensor.get_distance()
 
@@ -376,7 +376,7 @@ def moveToGoal():
 
     # Calculating respective error
     error = 5.0 - inchesDistance
-        
+
     # Computing the control signal
     controlSignal = kpValue * error
 
@@ -395,9 +395,9 @@ def moveToGoal():
             # Turning left
             pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
             pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
-                  
-def spinForGoal():	    
-    if len(keypoints) >= 1: 
+
+def spinForGoal():
+    if len(keypoints) >= 1:
         ### Calculating respective error
         error = 80 - x_position
 
@@ -408,10 +408,10 @@ def spinForGoal():
         newSignal = saturationFunctionGoalFace(controlSignal)
 
         ### Setting speed of the robot with the newly computed values
-        spinOnSelfIPS(newSignal, newSignal)    
+        spinOnSelfIPS(newSignal, newSignal)
     else:
         pwm.set_pwm(LSERVO, 0, math.floor(1.55 / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096)) 
+        pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096))
 
 # Function to set appropiate boundaries for right sensor
 def saturationFunctionRight(inches):
@@ -423,7 +423,7 @@ def saturationFunctionRight(inches):
     elif controlSignal < -0.5:
         controlSignal = -0.5
     return controlSignal
-              
+
 # Declaring the disared distance to the wall
 desiredDistance = 5.0
 
@@ -450,26 +450,26 @@ while flagStart:
 
     # Get a frame
     frame = camera.read()
-    
-    # Blob detection works better in the HSV color space 
+
+    # Blob detection works better in the HSV color space
     # (than the RGB color space) so the frame is converted to HSV.
     frame_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-    
+
     # Create a mask using the given HSV range
     mask = cv.inRange(frame_hsv, (minH, minS, minV), (maxH, maxS, maxV))
-    
+
     # Run the SimpleBlobDetector on the mask.
     # The results are stored in a vector of 'KeyPoint' objects,
     # which describe the location and size of the blobs.
     keypoints = detector.detect(mask)
-		
+
     # For each detected blob, draw a circle on the frame
     frame_with_keypoints = cv.drawKeypoints(frame, keypoints, None, color = (0, 255, 0), flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    
+
     # Write text onto the frame
     cv.putText(frame_with_keypoints, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
     cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-    
+
     #Print FPS on screen and number of blobs.
     print("Camera FPS: ", fps)
     print("Number of blobs detected: ", len(keypoints))
@@ -477,31 +477,31 @@ while flagStart:
         x_position = keypoint.pt[0]
         y_position = keypoint.pt[1]
         circle_diameter = keypoint.size # diameter of circle
-        keypoint_angle = keypoint.angle # angle 
-        
+        keypoint_angle = keypoint.angle # angle
+
         print("x: ", x_position)
         print("y: ", y_position)
-        print("size: ", circle_diameter)	   
-    
+        print("size: ", circle_diameter)
+
     # Reading in from sensor
     fDistance = fSensor.get_distance()
 
     # Transforming readings to inches
     inchesDistance = fDistance * 0.0393700787
-    
+
     if inchesDistance > 5.0 and x_position > 157 and x_position < 163:
         moveToGoal()
     elif inchesDistance < 5.0 and circle_diameter < 125:
         turnLeft()
-        wallFollow() 
-    else:
-        spinForGoal()
-        
+        wallFollow()
+    #else:
+    #    spinForGoal()
+
     #if x_position <= 157 or x_position >= 163:
      #   spinForGoal()
     #else:
-    #    moveToGoal() 
-    
+    #    moveToGoal()
+
     # Check for user input
     c = cv.waitKey(1)
     if c == 27 or c == ord('q') or c == ord('Q'): # Esc or Q
