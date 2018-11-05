@@ -319,7 +319,7 @@ def spinOnSelfIPS(ipsLeft, ipsRight):
 #When in front of object move forward
 def moveToGoal():
     fps, prev = 0.0, 0.0
-
+    
     # Calculate FPS
     now = time.time()
     fps = (fps*FPS_SMOOTHING + (1/(now - prev))*(1.0 - FPS_SMOOTHING))
@@ -331,7 +331,7 @@ def moveToGoal():
     # Blob detection works better in the HSV color space
     # (than the RGB color space) so the frame is converted to HSV.
     frame_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-
+ 
     # Create a mask using the given HSV range
     mask = cv.inRange(frame_hsv, (minH, minS, minV), (maxH, maxS, maxV))
 
@@ -345,21 +345,21 @@ def moveToGoal():
 
     # Write text onto the frame
     cv.putText(frame_with_keypoints, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-    cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-
-
+    cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))  
+    
+    
     print("Number of blobs detected: ", len(keypoints))
     for keypoint in keypoints:
         x_position = keypoint.pt[0]
         y_position = keypoint.pt[1]
         circle_diameter = keypoint.size # diameter of circle
         keypoint_angle = keypoint.angle # angle
-
+          
         print("x: ", x_position)
         print("y: ", y_position)
         print("size: ", circle_diameter)
         print("front distance in inches: ", finches)
-
+    
     print("MOVE TO GOOOOAALLLL")
     sensorCount = 0
 
@@ -393,7 +393,7 @@ def moveToGoal():
         time.sleep(0.25)
         wallFollow()
 
-def spinForGoal():
+def spinForGoal():  
     if len(keypoints) >= 1:
         print("SPIN FOR GOALLLLLLLL")
         ### Calculating respective error
@@ -441,9 +441,9 @@ def setSpeedsvw(v, w):
 
 def wallFollow():
     sensorCount = 0
-
+    
     fps, prev = 0.0, 0.0
-
+    
     # Calculate FPS
     now = time.time()
     fps = (fps*FPS_SMOOTHING + (1/(now - prev))*(1.0 - FPS_SMOOTHING))
@@ -455,7 +455,7 @@ def wallFollow():
     # Blob detection works better in the HSV color space
     # (than the RGB color space) so the frame is converted to HSV.
     frame_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-
+ 
     # Create a mask using the given HSV range
     mask = cv.inRange(frame_hsv, (minH, minS, minV), (maxH, maxS, maxV))
 
@@ -469,11 +469,11 @@ def wallFollow():
 
     # Write text onto the frame
     cv.putText(frame_with_keypoints, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-    cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-
+    cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))  
+    
     while len(keypoints) < 1:
         print("EEEEEEEL PIPIIIIII JOOOOOONOEEEEEEESS WAAAALL FOLLOOOOW")
-
+        
         # Calculate FPS
         now = time.time()
         fps = (fps*FPS_SMOOTHING + (1/(now - prev))*(1.0 - FPS_SMOOTHING))
@@ -485,7 +485,7 @@ def wallFollow():
         # Blob detection works better in the HSV color space
         # (than the RGB color space) so the frame is converted to HSV.
         frame_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-
+ 
         # Create a mask using the given HSV range
         mask = cv.inRange(frame_hsv, (minH, minS, minV), (maxH, maxS, maxV))
 
@@ -499,20 +499,20 @@ def wallFollow():
 
         # Write text onto the frame
         cv.putText(frame_with_keypoints, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-        cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-
+        cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))  
+        
         print("Number of blobs detected: ", len(keypoints))
         for keypoint in keypoints:
             x_position = keypoint.pt[0]
             y_position = keypoint.pt[1]
             circle_diameter = keypoint.size # diameter of circle
             keypoint_angle = keypoint.angle # angle
-
+            
             print("x: ", x_position)
             print("y: ", y_position)
             print("size: ", circle_diameter)
             print("front distance in inches: ", finches)
-
+        
 	    # Reading in from sensors
         fDistance = fSensor.get_distance()
         rDistance = rSensor.get_distance()
@@ -557,17 +557,12 @@ def turnLeft():
 
     # Transforming readings to inches
     inchesDistance = fDistance * 0.0393700787
-
+	
     while inchesDistance < 10:
-        if inchesDistance < 3:
-            pwm.set_pwm(LSERVO, 0, math.floor(1.47 / 20 * 4096))
-            pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(1.47) / 20 * 4096))
-
-            time.sleep(1.2)
-        pwm.set_pwm(LSERVO, 0, math.floor(1.49 / 20 * 4096))
-        pwm.set_pwm(RSERVO, 0, math.floor(1.42 / 20 * 4096))
+        pwm.set_pwm(LSERVO, 0, math.floor(1.44 / 20 * 4096))
+        pwm.set_pwm(RSERVO, 0, math.floor(1.41 / 20 * 4096))
         #setSpeedsIPS(1.3, -2)
-
+        
         # Reading in from sensor
         fDistance = fSensor.get_distance()
 
@@ -576,7 +571,7 @@ def turnLeft():
     time.sleep(0.25)
     pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
-
+  
 
 # Declaring the disared distance to the wall
 desiredDistance = 5.0
@@ -634,7 +629,7 @@ while flagStart:
         keypoint_angle = keypoint.angle # angle
         fDistance = fSensor.get_distance()
         finches = fDistance * 0.0393700787
-
+		
         print("x: ", x_position)
         print("y: ", y_position)
         print("size: ", circle_diameter)
