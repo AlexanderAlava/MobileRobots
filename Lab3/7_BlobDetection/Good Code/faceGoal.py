@@ -282,10 +282,10 @@ def saturationFunction(ips):
     #elif controlSignal < -1.0:
         #controlSignal = -1.0
     #return controlSignal
-    if controlSignal > 0.8:
-        controlSignal = 0.8
-    elif controlSignal < -0.8:
-        controlSignal = -0.8
+    if controlSignal > 1.0:
+        controlSignal = 1.0
+    elif controlSignal < -1.0:
+        controlSignal = -1.0
     return controlSignal
     
 # Function to set appropiate boundaries for front sensor
