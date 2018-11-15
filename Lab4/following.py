@@ -190,10 +190,30 @@ def saturationFunctionRight(inches):
 
 # Function to make a left turn when needed
 def turnLeft():
-    setSpeedsIPS(1.3, -2)
-    time.sleep(2.35)
-    setSpeedsIPS(0,0)
-    time.sleep(0.1)
+	# Reading in from sensor
+    fDistance = fSensor.get_distance()
+
+    # Transforming readings to inches
+    inchesDistance = fDistance * 0.0393700787
+
+    while inchesDistance < 10:
+        if inchesDistance < 3:
+            pwm.set_pwm(LSERVO, 0, math.floor(1.47 / 20 * 4096))
+            pwm.set_pwm(RSERVO, 0, math.floor(servoFlip(1.47) / 20 * 4096))
+
+            time.sleep(1.2)
+        pwm.set_pwm(LSERVO, 0, math.floor(1.49 / 20 * 4096))
+        pwm.set_pwm(RSERVO, 0, math.floor(1.42 / 20 * 4096))
+        #setSpeedsIPS(1.3, -2)
+
+        # Reading in from sensor
+        fDistance = fSensor.get_distance()
+
+        # Transforming readings to inches
+        inchesDistance = fDistance * 0.0393700787
+    time.sleep(0.25)
+    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
 
 
 def setSpeedsvw(v, w):
@@ -231,25 +251,36 @@ while True:
     # Reading in from sensors
     fDistance = fSensor.get_distance()
     rDistance = rSensor.get_distance()
+    lDistance = lSensor.get_distance()
 
     # Transforming readings to inches
     inchesDistanceFront = fDistance * 0.0393700787
     inchesDistanceRight = rDistance * 0.0393700787
+    inchesDistanceLeft = lDistance * 0.0393700787
 
     # Calculating respective errors
     errorf = 5.0 - inchesDistanceFront
     errorr = 5.0 - inchesDistanceRight
+    errorl = 5.0 - inchesDistanceLeft
 
     # Computing the control signals
     controlSignalf = kpValue * errorf
     controlSignalr = kpValue * errorr
+    controlSignall = kpValue * errorl
 
     # Running control signals through saturation functions
     newSignalf = saturationFunction(controlSignalf)
     newSignalr = saturationFunctionRight(controlSignalr)
+    newSignalrl = saturationFunctionRight(controlSignall)
 
-    # Setting speed of the robot, angular speed will be zero when moving straight
-    setSpeedsvw(linearSpeed,-newSignalr)
+
+    if errorr < errorl:
+        # Setting speed of the robot, angular speed will be zero when moving straight
+        setSpeedsvw(linearSpeed,-newSignalr)
+    elif errorr > errorl:
+        setSpeedsvw(linearSpeed,newSignalr)
+    else:
+        setSpeedsvw(linearSpeed,0)
 
     # Checking if there is an object approaching from the front
     if inchesDistanceFront < 5.0:
