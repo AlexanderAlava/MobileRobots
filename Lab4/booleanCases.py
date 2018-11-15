@@ -6,7 +6,7 @@ import VL53L0X
 import RPi.GPIO as GPIO
 import signal
 import math
-import random
+from numpy import random
 
 # Declaring and defining the left and right servos maps constructed with data generated from calibrateSpeeds(
 lPwmTranslation = {
@@ -235,17 +235,6 @@ rightWallOpen = False
 option = 0
 listOfOptions = [1, 2, 3]
 
-#Constantly updates the flags while reading the sensors.
-if inchesDistanceFront > 15:
-    frontWallOpen = True
-
-if inchesDistanceRight > 15:
-    rightWallOpen = True
-
-if inchesDistanceLeft > 15:
-    leftWallOpen = True
-
-
 #Check if specific flags are set to decide action.
 def whatToDo(leftWallOpen, frontWallOpen, rightWallOpen):
     option = 0
@@ -269,28 +258,36 @@ def whatToDo(leftWallOpen, frontWallOpen, rightWallOpen):
 
     if option == 1:
         #turn left
-        turnLeft()
-        moveForward()
     elif option == 2:
         #keep moving forward
-        moveForward()
     elif option == 3:
         #right turn
-        turnRight()
-        moveForward()
     else:
-        turn360()
-        moveForward()
+        #360 turn and move forward
 
 while True:
     # Reading in from sensors
     fDistance = fSensor.get_distance()
     rDistance = rSensor.get_distance()
+    lDistance = lSensor.get_distance()
 
     # Transforming readings to inches
     inchesDistanceFront = fDistance * 0.0393700787
     inchesDistanceRight = rDistance * 0.0393700787
+    inchesDistanceLeft = lDistance * 0.0393700787
 
+    #Constantly updates the flags while reading the sensors.
+    if inchesDistanceFront > 15:
+        frontWallOpen = True
+
+    if inchesDistanceRight > 15:
+        rightWallOpen = True
+
+    if inchesDistanceLeft > 15:
+        leftWallOpen = True
+    
+    whatToDo(leftWallOpen, frontWallOpen, rightWallOpen)
+    
     # Calculating respective errors
     errorf = 5.0 - inchesDistanceFront
     errorr = 5.0 - inchesDistanceRight

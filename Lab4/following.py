@@ -260,8 +260,8 @@ while True:
 
     # Calculating respective errors
     errorf = 5.0 - inchesDistanceFront
-    errorr = 5.0 - inchesDistanceRight
-    errorl = 5.0 - inchesDistanceLeft
+    errorr = 7.0 - inchesDistanceRight
+    errorl = 7.0 - inchesDistanceLeft
 
     # Computing the control signals
     controlSignalf = kpValue * errorf
@@ -271,14 +271,14 @@ while True:
     # Running control signals through saturation functions
     newSignalf = saturationFunction(controlSignalf)
     newSignalr = saturationFunctionRight(controlSignalr)
-    newSignalrl = saturationFunctionRight(controlSignall)
+    newSignall = saturationFunctionRight(controlSignall)
 
 
-    if errorr < errorl:
+    if errorr > errorl and errorl < 15.0:
         # Setting speed of the robot, angular speed will be zero when moving straight
         setSpeedsvw(linearSpeed,-newSignalr)
-    elif errorr > errorl:
-        setSpeedsvw(linearSpeed,newSignalr)
+    elif errorr < errorl and errorr < 15.0:
+        setSpeedsvw(linearSpeed,newSignall)
     else:
         setSpeedsvw(linearSpeed,0)
 
