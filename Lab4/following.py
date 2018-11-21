@@ -118,6 +118,58 @@ GPIO.output(FSHDN, GPIO.HIGH)
 time.sleep(0.01)
 fSensor.start_ranging(VL53L0X.VL53L0X_GOOD_ACCURACY_MODE)
 
+#Function that resets the total count of ticks
+def resetCounts():
+    global totalCountTuple, lTickCount, rTickCount, startTime
+    lTickCount = 0
+    rTickCount = 0
+    startTime = time.time()
+
+#Function that gets previous tick counts
+def getCounts():
+    return (lTickCount, rTickCount)
+
+#Function that returns instantaneous left and right wheel speeds
+def getSpeeds():
+    global lTickCount, rTickCount, currentTime, lSpeed, rSpeed
+    currentTime = time.time() - startTime
+    lSpeed = (lTickCount / 32) / currentTime
+    rSpeed = (rTickCount / 32) / currentTime
+    return (lSpeed, rSpeed)
+
+# This function is called when the left encoder detects a rising edge signal.
+def onLeftEncode(pin):
+    global lTickCount, lRevolutions, lSpeed, currentTime
+
+    # Increasing tickcount and computing instantaneous values
+    lTickCount = lTickCount + 1
+    lRevolutions = float(lTickCount / 32)
+    currentTime = time.time() - startTime
+    lSpeed = lRevolutions / currentTime
+
+# This function is called when the right encoder detects a rising edge signal.
+def onRightEncode(pin):
+    global rTickCount, rRevolutions, rSpeed, currentTime
+
+    # Increasing tickcount and computing instantaneous values
+    rTickCount = rTickCount + 1
+    rRevolutions = float(rTickCount / 32)
+    currentTime = time.time() - startTime
+    rSpeed = rRevolutions / currentTime
+
+# Defining function that initializes the encoders
+def initEncoders():
+    # Set the pin numbering scheme to the numbering shown on the robot itself.
+    GPIO.setmode(GPIO.BCM)
+    # Set encoder pins as input
+    # Also enable pull-up resistors on the encoder pins
+    # This ensures a clean 0V and 3.3V is always outputted from the encoders.
+    GPIO.setup(LENCODER, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(RENCODER, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    # Attach a rising edge interrupt to the encoder pins
+    GPIO.add_event_detect(LENCODER, GPIO.RISING, onLeftEncode)
+    GPIO.add_event_detect(RENCODER, GPIO.RISING, onRightEncode)
+
 def ctrlC(signum, frame):
     print("Exiting")
     GPIO.cleanup()
@@ -221,7 +273,40 @@ def setSpeedsvw(v, w):
     rightSpeed1 = (v - (w*3.95))
     setSpeedsIPS(-leftSpeed1, -rightSpeed1)
 
-def moveForward():
+
+## Attach the Ctrl+C signal interrupt
+signal.signal(signal.SIGINT, ctrlC)
+
+# Initializing encoders
+initEncoders()
+
+# Declaring the disared distance to the wall
+desiredDistance = 5.0
+
+# Declaring the kp value to be used
+kpValue = 0.9
+
+# Sleeping the motors before starting the movement
+pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
+pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
+time.sleep(3)
+
+# Waiting for user to enter the required key in order to start the movement
+flagStart = False
+startInput = input("Press 'm' to start robot wall following.")
+if startInput == "m":
+	flagStart = True
+else:
+	print("Exiting program, re-run file wall following.")
+	exit()
+
+# Declaring constant linear speed that will be used during the movement
+linearSpeed = 5
+
+# Declaring a variable to keep track of front sensor big readings
+sensorCount = 0
+
+while True:
     # Reading in from sensors
     fDistance = fSensor.get_distance()
     rDistance = rSensor.get_distance()
