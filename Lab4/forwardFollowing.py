@@ -221,55 +221,6 @@ def setSpeedsvw(v, w):
     rightSpeed1 = (v - (w*3.95))
     setSpeedsIPS(-leftSpeed1, -rightSpeed1)
 
-def moveForward():
-    # Reading in from sensors
-    fDistance = fSensor.get_distance()
-    rDistance = rSensor.get_distance()
-    lDistance = lSensor.get_distance()
-
-    # Transforming readings to inches
-    inchesDistanceFront = fDistance * 0.0393700787
-    inchesDistanceRight = rDistance * 0.0393700787
-    inchesDistanceLeft = lDistance * 0.0393700787
-
-    # Calculating respective errors
-    errorf = 5.0 - inchesDistanceFront
-    errorr = 7.0 - inchesDistanceRight
-    errorl = 7.0 - inchesDistanceLeft
-
-    # Computing the control signals
-    controlSignalf = kpValue * errorf
-    controlSignalr = kpValue * errorr
-    controlSignall = kpValue * errorl
-
-    # Running control signals through saturation functions
-    newSignalf = saturationFunction(controlSignalf)
-    newSignalr = saturationFunctionRight(controlSignalr)
-    newSignall = saturationFunctionRight(controlSignall)
-
-
-    if errorr > errorl and errorl < 15.0:
-        # Setting speed of the robot, angular speed will be zero when moving straight
-        setSpeedsvw(linearSpeed,-newSignalr)
-    elif errorr < errorl and errorr < 15.0:
-        setSpeedsvw(linearSpeed,newSignall)
-    else:
-        setSpeedsvw(linearSpeed,0)
-
-    # Checking if there is an object approaching from the front
-    if inchesDistanceFront < 5.0:
-        # Increasing reading count
-	    sensorCount += 1
-
-        # Checking if the front small reading happens continously to avoid a fake trigger
-	    if sensorCount > 4:
-            # Turning left
-		    turnLeft()
-
-    # Clearing sensor count for continous small front readings
-    else:
-        sensorCount = 0
-
 # Declaring the disared distance to the wall
 desiredDistance = 5.0
 
@@ -296,7 +247,51 @@ linearSpeed = 5
 # Declaring a variable to keep track of front sensor big readings
 sensorCount = 0
 
-newCell = True;
-
 while True:
-    moveForward()
+    # Reading in from sensors
+    fDistance = fSensor.get_distance()
+    rDistance = rSensor.get_distance()
+    lDistance = lSensor.get_distance()
+
+    # Transforming readings to inches
+    inchesDistanceFront = fDistance * 0.0393700787
+    inchesDistanceRight = rDistance * 0.0393700787
+    inchesDistanceLeft = lDistance * 0.0393700787
+
+    # Calculating respective errors
+    errorf = 5.0 - inchesDistanceFront
+    errorr = 5.0 - inchesDistanceRight
+    errorl = 5.0 - inchesDistanceLeft
+
+    # Computing the control signals
+    controlSignalf = kpValue * errorf
+    controlSignalr = kpValue * errorr
+    controlSignall = kpValue * errorl
+
+    # Running control signals through saturation functions
+    newSignalf = saturationFunction(controlSignalf)
+    newSignalr = saturationFunctionRight(controlSignalr)
+    newSignalrl = saturationFunctionRight(controlSignall)
+
+
+    if errorr < errorl:
+        # Setting speed of the robot, angular speed will be zero when moving straight
+        setSpeedsvw(linearSpeed,-newSignalr)
+    elif errorr > errorl:
+        setSpeedsvw(linearSpeed,newSignalr)
+    else:
+        setSpeedsvw(linearSpeed,0)
+
+    # Checking if there is an object approaching from the front
+    if inchesDistanceFront < 5.0:
+        # Increasing reading count
+	    sensorCount += 1
+
+        # Checking if the front small reading happens continously to avoid a fake trigger
+	    if sensorCount > 4:
+            # Turning left
+		    turnLeft()
+
+    # Clearing sensor count for continous small front readings
+    else:
+        sensorCount = 0
