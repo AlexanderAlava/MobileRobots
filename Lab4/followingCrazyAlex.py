@@ -6,6 +6,7 @@ import VL53L0X
 import RPi.GPIO as GPIO
 import signal
 import math
+import random
 
 # Declaring and defining the left and right servos maps constructed with data generated from calibrateSpeeds(
 lPwmTranslation = {
@@ -118,6 +119,58 @@ GPIO.output(FSHDN, GPIO.HIGH)
 time.sleep(0.01)
 fSensor.start_ranging(VL53L0X.VL53L0X_GOOD_ACCURACY_MODE)
 
+#Function that resets the total count of ticks
+def resetCounts():
+    global totalCountTuple, lTickCount, rTickCount, startTime
+    lTickCount = 0
+    rTickCount = 0
+    startTime = time.time()
+
+#Function that gets previous tick counts
+def getCounts():
+    return (lTickCount, rTickCount)
+
+#Function that returns instantaneous left and right wheel speeds
+def getSpeeds():
+    global lTickCount, rTickCount, currentTime, lSpeed, rSpeed
+    currentTime = time.time() - startTime
+    lSpeed = (lTickCount / 32) / currentTime
+    rSpeed = (rTickCount / 32) / currentTime
+    return (lSpeed, rSpeed)
+
+# This function is called when the left encoder detects a rising edge signal.
+def onLeftEncode(pin):
+    global lTickCount, lRevolutions, lSpeed, currentTime
+
+    # Increasing tickcount and computing instantaneous values
+    lTickCount = lTickCount + 1
+    lRevolutions = float(lTickCount / 32)
+    currentTime = time.time() - startTime
+    lSpeed = lRevolutions / currentTime
+
+# This function is called when the right encoder detects a rising edge signal.
+def onRightEncode(pin):
+    global rTickCount, rRevolutions, rSpeed, currentTime
+
+    # Increasing tickcount and computing instantaneous values
+    rTickCount = rTickCount + 1
+    rRevolutions = float(rTickCount / 32)
+    currentTime = time.time() - startTime
+    rSpeed = rRevolutions / currentTime
+
+# Defining function that initializes the encoders
+def initEncoders():
+    # Set the pin numbering scheme to the numbering shown on the robot itself.
+    GPIO.setmode(GPIO.BCM)
+    # Set encoder pins as input
+    # Also enable pull-up resistors on the encoder pins
+    # This ensures a clean 0V and 3.3V is always outputted from the encoders.
+    GPIO.setup(LENCODER, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(RENCODER, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    # Attach a rising edge interrupt to the encoder pins
+    GPIO.add_event_detect(LENCODER, GPIO.RISING, onLeftEncode)
+    GPIO.add_event_detect(RENCODER, GPIO.RISING, onRightEncode)
+
 def ctrlC(signum, frame):
     print("Exiting")
     GPIO.cleanup()
@@ -221,16 +274,178 @@ def setSpeedsvw(v, w):
     rightSpeed1 = (v - (w*3.95))
     setSpeedsIPS(-leftSpeed1, -rightSpeed1)
 
+def stop():
+    pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
+    time.sleep(1)
+
+#Check if specific flags are set to decide action.
+def whatToDo(leftWallOpen, frontWallOpen, rightWallOpen):  
+    option = 0
+    
+    if leftWallOpen and frontWallOpen and rightWallOpen:
+        choices = [1, 2, 3]
+        option = random.choice(choices)
+        #stop()
+        
+    elif frontWallOpen and rightWallOpen:
+        choices = [2, 3]
+        option = random.choice(choices)
+        #stop()
+        
+    elif leftWallOpen and rightWallOpen:
+        choices = [1, 3]
+        option = random.choice(choices)
+        #stop()
+        
+    elif leftWallOpen and frontWallOpen:
+        choices = [1, 2]
+        option = random.choice(choices)
+        #stop()
+        
+    elif rightWallOpen:
+        option = 3
+        #stop()
+        
+    elif frontWallOpen:
+        option = 2
+        #stop()
+        
+    elif leftWallOpen:
+        option = 1
+        #stop()
+        
+    else:
+        option = 0
+        #stop()
+    
+    #CHECK WHAT MOVE I MUST DO!
+    if option == 1:
+        #turn left
+        print("LEFT TURN")
+        inPlaceLeftTurn()
+    elif option == 2:
+        #keep moving forward
+        print("MOVE FORWARD")
+    elif option == 3:
+        #right turn
+        print("RIGHT TURN")
+        inPlaceRightTurn()
+    else:
+        #360 turn and move forward
+        print("WALL IN ALL THREE PLACES")
+        inPlaceTurnAround()
+
+def moveForward():
+    global sensorCount
+	
+	# Reading in from sensors
+    fDistance = fSensor.get_distance()
+    rDistance = rSensor.get_distance()
+    lDistance = lSensor.get_distance()
+
+    # Transforming readings to inches
+    inchesDistanceFront = fDistance * 0.0393700787
+    inchesDistanceRight = rDistance * 0.0393700787
+    inchesDistanceLeft = lDistance * 0.0393700787
+
+    # Calculating respective errors
+    errorf = 5.0 - inchesDistanceFront
+    errorr = 7.0 - inchesDistanceRight
+    errorl = 7.0 - inchesDistanceLeft
+
+    # Computing the control signals
+    controlSignalf = kpValue * errorf
+    controlSignalr = kpValue * errorr
+    controlSignall = kpValue * errorl
+
+    # Running control signals through saturation functions
+    newSignalf = saturationFunction(controlSignalf)
+    newSignalr = saturationFunctionRight(controlSignalr)
+    newSignall = saturationFunctionRight(controlSignall)
+
+    if errorr > 15.0 and errorl < 15.0:
+        setSpeedsvw(linearSpeed,0)
+    elif errorr > errorl and errorr < 15.0:
+        setSpeedsvw(linearSpeed,-newSignalr)
+    elif errorr > errorl and error > 15.0:
+        setSpeedsvw(linearSpeed,newSignall)
+    elif errorr < errorl and errorl < 15.0:
+        setSpeedsvw(linearSpeed,newSignall)
+    elif errorr < errorl and errorl > 15.0:
+        setSpeedsvw(linearSpeed,-newSignalr)
+    else:
+        setSpeedsvw(linearSpeed,0)
+
+   #if errorr > errorl and errorr < 15.0:
+        # Setting speed of the robot, angular speed will be zero when moving straight
+    #    setSpeedsvw(linearSpeed,-newSignalr)
+    #elif errorr < errorl and errorl < 15.0:
+     #   setSpeedsvw(linearSpeed,newSignall)
+    #else:
+     #   setSpeedsvw(linearSpeed,0)
+
+    # Checking if there is an object approaching from the front
+    if inchesDistanceFront < 5.0:
+        # Increasing reading count
+	    sensorCount += 1
+
+        # Checking if the front small reading happens continously to avoid a fake trigger
+	    if sensorCount > 4:
+            # Turning left
+		    turnLeft()
+
+    # Clearing sensor count for continous small front readings
+    else:
+        sensorCount = 0
+
+def inPlaceLeftTurn():
+    global distanceTravel, lRevolutions, rRevolutions
+    stop()
+    pwm.set_pwm(LSERVO, 0, math.floor(1.46 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.42 / 20 * 4096))
+    time.sleep(0.9)
+    lRevolutions = 1.1
+    rRevolutions = 1.1
+    
+def inPlaceRightTurn():
+    global distanceTravel, lRevolutions, rRevolutions
+    stop()
+    pwm.set_pwm(LSERVO, 0, math.floor(1.58 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.54 / 20 * 4096))
+    time.sleep(0.9)
+    lRevolutions = 1.1
+    rRevolutions = 1.1
+    
+def inPlaceTurnAround():
+    global distanceTravel, lRevolutions, rRevolutions
+    stop()
+    pwm.set_pwm(LSERVO, 0, math.floor(1.55 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096))
+    time.sleep(1.9)
+    lRevolutions = 1.1
+    rRevolutions = 1.1
+	
+
+## Attach the Ctrl+C signal interrupt
+signal.signal(signal.SIGINT, ctrlC)
+
+# Initializing encoders
+initEncoders()
+
 # Declaring the disared distance to the wall
 desiredDistance = 5.0
 
+# Declaring variable to keep track of distance traveled
+distanceTravel = 0
+
 # Declaring the kp value to be used
-kpValue = 0.9
+kpValue = 0.82
 
 # Sleeping the motors before starting the movement
 pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
 pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
-time.sleep(3)
+time.sleep(0.5)
 
 # Waiting for user to enter the required key in order to start the movement
 flagStart = False
@@ -247,51 +462,52 @@ linearSpeed = 5
 # Declaring a variable to keep track of front sensor big readings
 sensorCount = 0
 
+#Booleans to determine if walls are open?
+frontWallOpen = False
+leftWallOpen = False
+rightWallOpen = False
+newCell = True
+
 while True:
-    # Reading in from sensors
+	# Reading in from sensors
     fDistance = fSensor.get_distance()
     rDistance = rSensor.get_distance()
     lDistance = lSensor.get_distance()
-
+    
     # Transforming readings to inches
     inchesDistanceFront = fDistance * 0.0393700787
     inchesDistanceRight = rDistance * 0.0393700787
     inchesDistanceLeft = lDistance * 0.0393700787
+    
+    #Constantly updates the flags while reading the sensors.
+    if inchesDistanceFront > 15:
+        frontWallOpen = True
+        
+    if inchesDistanceRight > 15:
+        rightWallOpen = True
 
-    # Calculating respective errors
-    errorf = 5.0 - inchesDistanceFront
-    errorr = 5.0 - inchesDistanceRight
-    errorl = 5.0 - inchesDistanceLeft
+    if inchesDistanceLeft > 15:
+        leftWallOpen = True
+    
+    #Checking if the robot has already traveled the required distance
+    distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
+    #print("Distance Traveled is: ", distanceTravel)
+    #print(newCell)
+    if distanceTravel > 9 and newCell:
+        print("I have entered a new cell")
+        newCell = False
+    if distanceTravel > 18:
+        whatToDo(leftWallOpen, frontWallOpen, rightWallOpen)
+        newCell = True
+        
+        distanceTravel = 0
+        #stop()
+        resetCounts()
+        print("TRAVELLED .75 FEET (9INCHES)")
+	
+    frontWallOpen = False
+    leftWallOpen = False
+    rightWallOpen = False
+	      	
+    moveForward()
 
-    # Computing the control signals
-    controlSignalf = kpValue * errorf
-    controlSignalr = kpValue * errorr
-    controlSignall = kpValue * errorl
-
-    # Running control signals through saturation functions
-    newSignalf = saturationFunction(controlSignalf)
-    newSignalr = saturationFunctionRight(controlSignalr)
-    newSignalrl = saturationFunctionRight(controlSignall)
-
-
-    if errorr < errorl:
-        # Setting speed of the robot, angular speed will be zero when moving straight
-        setSpeedsvw(linearSpeed,-newSignalr)
-    elif errorr > errorl:
-        setSpeedsvw(linearSpeed,newSignalr)
-    else:
-        setSpeedsvw(linearSpeed,0)
-
-    # Checking if there is an object approaching from the front
-    if inchesDistanceFront < 5.0:
-        # Increasing reading count
-	    sensorCount += 1
-
-        # Checking if the front small reading happens continously to avoid a fake trigger
-	    if sensorCount > 4:
-            # Turning left
-		    turnLeft()
-
-    # Clearing sensor count for continous small front readings
-    else:
-        sensorCount = 0
