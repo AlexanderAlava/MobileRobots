@@ -646,6 +646,8 @@ def updateMaze(left, front, right, direction, currentCell):
             maze[currentCellIndex].north = 'O'
         else:
             maze[currentCellIndex].north = 'W'
+            
+        maze[currentCellIndex].east = maze[currentCellIndex].east
 		    
         #if leftIndex >= 0:
             #maze[leftIndex].east = maze[currentCellIndex].west
@@ -670,6 +672,8 @@ def updateMaze(left, front, right, direction, currentCell):
             maze[currentCellIndex].east = 'O'
         else:
             maze[currentCellIndex].east = 'W'
+            
+        maze[currentCellIndex].south = maze[currentCellIndex].south
 		    
 		    
         #if leftIndex >= 0:
@@ -695,7 +699,8 @@ def updateMaze(left, front, right, direction, currentCell):
             maze[currentCellIndex].south = 'O'
         else:
             maze[currentCellIndex].south = 'W'
-		    
+		
+        maze[currentCellIndex].west = maze[currentCellIndex].west
 		    
         #if leftIndex >= 0:
             #maze[leftIndex].east = maze[currentCellIndex].south
@@ -719,7 +724,8 @@ def updateMaze(left, front, right, direction, currentCell):
             maze[currentCellIndex].west = 'O'
         else:
             maze[currentCellIndex].west = 'W'
-		    
+		
+        maze[currentCellIndex].north = maze[currentCellIndex].north    
 		
         #if leftIndex >= 0:
             #maze[leftIndex].east = maze[currentCellIndex].east
