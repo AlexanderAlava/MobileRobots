@@ -10,8 +10,8 @@ import random
 
 # Declaring and defining the left and right servos maps constructed with data generated from calibrateSpeeds(
 lPwmTranslation = {
-                    0.00: 1.50, 0.01: 1.50, 0.02: 1.50, 0.03: 1.50, 0.04: 1.50,
-                    0.05: 1.50, 0.06: 1.51, 0.07: 1.50, 0.08: 1.515, 0.09: 1.515,
+                    0.00: 1.50, 0.01: 1.505, 0.02: 1.505, 0.03: 1.51, 0.04: 1.51,
+                    0.05: 1.51, 0.06: 1.51, 0.07: 1.51, 0.08: 1.515, 0.09: 1.515,
                     0.10: 1.515, 0.11: 1.515, 0.12: 1.515, 0.13: 1.52, 0.14: 1.52,
                     0.15: 1.52, 0.16: 1.52, 0.17: 1.52, 0.18: 1.525, 0.19: 1.525,
                     0.20: 1.525, 0.21: 1.525, 0.22: 1.525, 0.23: 1.525, 0.24: 1.53,
@@ -30,8 +30,8 @@ lPwmTranslation = {
                     0.85: 1.64, 0.86: 1.65, 0.87: 1.70
                     }
 rPwmTranslation = {
-                    0.00: 1.50, 0.01: 1.50, 0.02: 1.50, 0.03: 1.50, 0.04: 1.50,
-                    0.05: 1.50, 0.06: 1.50, 0.07: 1.50, 0.08: 1.51, 0.09: 1.51,
+                    0.00: 1.50, 0.01: 1.50, 0.02: 1.50, 0.03: 1.505, 0.04: 1.505,
+                    0.05: 1.505, 0.06: 1.505, 0.07: 1.505, 0.08: 1.51, 0.09: 1.51,
                     0.10: 1.51, 0.11: 1.51, 0.12: 1.51, 0.13: 1.515, 0.14: 1.515,
                     0.15: 1.515, 0.16: 1.515, 0.17: 1.515, 0.18: 1.52, 0.19: 1.52,
                     0.20: 1.52, 0.21: 1.52, 0.22: 1.52, 0.23: 1.525, 0.24: 1.525,
@@ -125,7 +125,7 @@ def resetCounts():
     lTickCount = 0
     rTickCount = 0
     startTime = time.time()
-
+    
 #Function that gets previous tick counts
 def getCounts():
     return (lTickCount, rTickCount)
@@ -268,53 +268,6 @@ def turnLeft():
     pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
 
-# Function to set appropiate boundaries for front sensor
-def saturationFunctionFront(ips):
-    controlSignal = ips
-    if controlSignal > 7.1:
-        controlSignal = 7.1
-    elif controlSignal < -7.1:
-        controlSignal = -7.1
-    return controlSignal
-
-def adjustFront():
-    global lRevolutions, rRevolutions
-	
-    frontCount = 0
-	
-    while True:
-        # Reading in from sensor
-        fDistance = fSensor.get_distance()
-
-        # Transforming readings to inches
-        inchesDistance = fDistance * 0.0393700787
-
-        # Calculating respective error
-        errorFrontAd = 8 - inchesDistance
-
-        # Computing the control signal
-        controlSignal = kpValue * errorFrontAd
-
-        # Running control signals through saturation function
-        newSignal = saturationFunctionFront(controlSignal)
-
-        # Setting speed of the robot with the newly computed values
-        setSpeedsIPS(newSignal, newSignal)
-        
-        if errorFrontAd < 0.5 and errorFrontAd > -0.5:
-            break
-            
-        frontCount = frontCount + 1
-        #print(frontCount)
-        
-        if frontCount > 80:
-            print("I AM BREEEEEAKIIIIIIIIING FREEEEEEEEEEEEEEEEE")
-            break
-    
-    lRevolutions = 1.1
-    rRevolutions = 1.1
-    
-    
 
 def setSpeedsvw(v, w):
     leftSpeed1 = (v + (w*3.95))
@@ -329,9 +282,6 @@ def stop():
 #Check if specific flags are set to decide action.
 def whatToDo(leftWallOpen, frontWallOpen, rightWallOpen):  
     option = 0
-    
-    if inchesDFront < 18:
-        adjustFront()
     
     if leftWallOpen and frontWallOpen and rightWallOpen:
         choices = [1, 2, 3]
@@ -380,11 +330,9 @@ def whatToDo(leftWallOpen, frontWallOpen, rightWallOpen):
     elif option == 3:
         #right turn
         print("RIGHT TURN")
-        inPlaceRightTurn()
     else:
         #360 turn and move forward
         print("WALL IN ALL THREE PLACES")
-        inPlaceTurnAround()
 
 def moveForward():
     global sensorCount
@@ -400,9 +348,9 @@ def moveForward():
     inchesDistanceLeft = lDistance * 0.0393700787
 
     # Calculating respective errors
-    errorf = 7.0 - inchesDistanceFront
-    errorr = 8.0 - inchesDistanceRight
-    errorl = 8.0 - inchesDistanceLeft
+    errorf = 5.0 - inchesDistanceFront
+    errorr = 7.0 - inchesDistanceRight
+    errorl = 7.0 - inchesDistanceLeft
 
     # Computing the control signals
     controlSignalf = kpValue * errorf
@@ -415,20 +363,11 @@ def moveForward():
     newSignall = saturationFunctionRight(controlSignall)
 
 
-    if inchesDistanceRight > inchesDistanceLeft and inchesDistanceRight < 12.0:
+    if errorr > errorl and errorl < 15.0:
         # Setting speed of the robot, angular speed will be zero when moving straight
-        #setSpeedsvw(linearSpeed,-newSignalr)
-        setSpeedsvw(linearSpeed,newSignall/3)
-    elif inchesDistanceRight > inchesDistanceLeft and inchesDistanceRight > 12.0:
-        # Setting speed of the robot, angular speed will be zero when moving straight
-        #setSpeedsvw(linearSpeed,-newSignalr)
-        setSpeedsvw(linearSpeed,newSignall/3)
-    elif inchesDistanceRight < inchesDistanceLeft and inchesDistanceLeft < 12.0:
-        setSpeedsvw(linearSpeed,-newSignalr/3)
-        #setSpeedsvw(linearSpeed,newSignall)
-    elif inchesDistanceRight < inchesDistanceLeft and inchesDistanceLeft > 12.0:
-        setSpeedsvw(linearSpeed,-newSignalr/3)
-        #setSpeedsvw(linearSpeed,newSignall)
+        setSpeedsvw(linearSpeed,-newSignalr)
+    elif errorr < errorl and errorr < 15.0:
+        setSpeedsvw(linearSpeed,newSignall)
     else:
         setSpeedsvw(linearSpeed,0)
 
@@ -447,307 +386,11 @@ def moveForward():
         sensorCount = 0
 
 def inPlaceLeftTurn():
-    global distanceTravel, lRevolutions, rRevolutions, direction
     stop()
-    pwm.set_pwm(LSERVO, 0, math.floor(1.46 / 20 * 4096))
-    pwm.set_pwm(RSERVO, 0, math.floor(1.42 / 20 * 4096))
-    time.sleep(0.9)
-    lRevolutions = 1.1
-    rRevolutions = 1.1
-    
-    if direction == 'W':
-        direction = 'S'
-    elif direction == 'S':
-        direction = 'E'
-    elif direction == 'E':
-        direction = 'N'
-    elif direction == 'N':
-        direction = 'W'	
-    
-def inPlaceRightTurn():
-    global distanceTravel, lRevolutions, rRevolutions, direction
-    stop()
-    pwm.set_pwm(LSERVO, 0, math.floor(1.58 / 20 * 4096))
-    pwm.set_pwm(RSERVO, 0, math.floor(1.54 / 20 * 4096))
-    time.sleep(0.9)
-    lRevolutions = 1.1
-    rRevolutions = 1.1
-    
-    if direction == 'W':
-        direction = 'N'
-    elif direction == 'N':
-        direction = 'E'
-    elif direction == 'E':
-        direction = 'S'
-    elif direction == 'S':
-        direction = 'W'
-    
-def inPlaceTurnAround():
-    global distanceTravel, lRevolutions, rRevolutions, direction
-    stop()
-    pwm.set_pwm(LSERVO, 0, math.floor(1.55 / 20 * 4096))
-    pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096))
-    time.sleep(1.9)
-    lRevolutions = 1.1
-    rRevolutions = 1.1
-    
-    if direction == 'W':
-        direction = 'E'
-    elif direction == 'E':
-        direction = 'W'
-    elif direction == 'N':
-        direction = 'S'
-    elif direction == 'S':
-        direction = 'N'
-	
-##############################################MAZEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE###########################################################################################################
-class Cell:
-	def __init__(self, west, north, east, south, visited = False):
-		# There are 4 walls per cell
-		# Wall values can be 'W', 'O', or '?' (wall, open, or unknown)
-		self.west = west
-		self.north = north
-		self.east = east
-		self.south = south
-		
-		# Store whether or not the cell has been visited before
-		self.visited = visited
-
-# Helper function that verifies all the walls of the maze
-def detectMazeInconsistencies(maze):
-	# Check horizontal walls
-	for i in range(3):
-		for j in range(4):
-			pos1 = i * 4 + j
-			pos2 = i * 4 + j + 4
-			hWall1 = maze[pos1].south
-			hWall2 = maze[pos2].north		
-			assert hWall1 == hWall2, " Cell " + str(pos1) + "'s south wall doesn't equal cell " + str(pos2) + "'s north wall! ('" + str(hWall1) + "' != '" + str(hWall2) + "')"
-	
-	# Check vertical walls
-	for i in range(4):
-		for j in range(3):
-			pos1 = i * 4 + j
-			pos2 = i * 4 + j + 1
-			vWall1 = maze[pos1].east
-			vWall2 = maze[pos2].west
-			assert vWall1 == vWall2, " Cell " + str(pos1) + "'s east wall doesn't equal cell " + str(pos2) + "'s west wall! ('" + str(vWall1) + "' != '" + str(vWall2) + "')"
-
-# You don't have to understand how this function works
-def printMaze(maze, hRes = 4, vRes = 2):
-	assert hRes > 0, "Invalid horizontal resolution"
-	assert vRes > 0, "Invalid vertical resolution"
-
-	# Get the dimensions of the maze drawing
-	hChars = 4 * (hRes + 1) + 2
-	vChars = 4 * (vRes + 1) + 1
-	
-	# Store drawing into a list
-	output = [" "] * (hChars * vChars - 1)
-	
-	# Draw top border
-	for i in range(1, hChars - 2):
-		output[i] = "_"
-	
-	# Draw bottom border
-	for i in range(hChars * (vChars - 1) + 1, hChars * (vChars - 1) + hChars - 2):
-		output[i] = "¯"
-	
-	# Draw left border
-	for i in range(hChars, hChars * (vChars - 1), hChars):
-		output[i] = "|"
-		
-	# Draw right border
-	for i in range(2 * hChars - 2, hChars * (vChars - 1), hChars):
-		output[i] = "|"
-
-	# Draw newline characters
-	for i in range(hChars - 1, hChars * vChars - 1, hChars):
-		output[i] = "\n"
-	
-	# Draw dots inside maze
-	for i in range((vRes + 1) * hChars, hChars * (vChars - 1), (vRes + 1) * hChars):
-		for j in range(hRes + 1, hChars - 2, hRes + 1):
-			output[i + j] = "·"
-	
-	# Draw question marks if cell is unvisited
-	for i in range(4):
-		for j in range(4):
-			cellNum = i * 4 + j
-			if maze[cellNum].visited:
-				continue
-			origin = (i * hChars * (vRes + 1) + hChars + 1) + (j * (hRes + 1))
-			for k in range(vRes):
-				for l in range(hRes):
-					output[origin + k * hChars + l] = "?"
-	
-	# Draw horizontal walls
-	for i in range(3):
-		for j in range(4):
-			cellNum = i * 4 + j
-			origin = ((i + 1) * hChars * (vRes + 1) + 1) + (j * (hRes + 1))
-			hWall = maze[cellNum].south
-			for k in range(hRes):
-				output[origin + k] = "-" if hWall == 'W' else " " if hWall == 'O' else "?"
-	
-	# Draw vertical walls
-	for i in range(4):
-		for j in range(3):
-			cellNum = i * 4 + j
-			origin = hChars + (hRes + 1) * (j + 1) + i * hChars * (vRes + 1)
-			vWall = maze[cellNum].east
-			for k in range(vRes):
-				output[origin + k * hChars] = "|" if vWall == 'W' else " " if vWall == 'O' else "?"
-
-	# Print drawing
-	print(''.join(output))			
-
-
-#########################################################################################################################################################
-
-#Function that is called to check the sensors and then update the maze walls based on current cell position.
-def updateMaze(left, front, right, direction, currentCell):
-    global maze
-	
-    currentCellIndex = currentCell - 1
-    maze[currentCellIndex].visited = True
-	
-    leftIndex = -1
-    upIndex = -1
-    rightIndex = -1
-    downIndex = -1
-	
-    if currentCellIndex % 4 > 0:
-        leftIndex = currentCellIndex - 1
-		
-    if (currentCellIndex + 1) % 4 > 0:
-        rightIndex = currentCellIndex + 1
-		
-    if currentCellIndex >= 4:
-        upIndex = currentCellIndex - 4
-		
-    if currentCellIndex < 12:
-        downIndex = currentCellIndex + 4
-	
-	
-	    ###########################WEST ORIENTATION#########################################
-    if direction == 'W':
-        if left == True:
-            maze[currentCellIndex].south = 'O'
-        else:
-            maze[currentCellIndex].south = 'W'
-	
-        if front == True:
-            maze[currentCellIndex].west = 'O'
-        else:
-            maze[currentCellIndex].west = 'W'
-	
-        if right == True:
-            maze[currentCellIndex].north = 'O'
-        else:
-            maze[currentCellIndex].north = 'W'
-		    
-        #if leftIndex >= 0:
-            #maze[leftIndex].east = maze[currentCellIndex].west
-			
-        #if upIndex >= 0:
-            #maze[upIndex].south = maze[currentCellIndex].north 
-	    
-	
-		###########################NORTH ORIENTATION#########################################
-    elif direction == 'N':
-        if left == True:
-            maze[currentCellIndex].west = 'O'
-        else:
-            maze[currentCellIndex].west = 'W'
-	
-        if front == True:
-            maze[currentCellIndex].north = 'O'
-        else:
-            maze[currentCellIndex].north = 'W'
-	
-        if right == True:
-            maze[currentCellIndex].east = 'O'
-        else:
-            maze[currentCellIndex].east = 'W'
-		    
-		    
-        #if leftIndex >= 0:
-            #maze[leftIndex].east = maze[currentCellIndex].west
-			
-        #if upIndex >= 0:
-            #maze[upIndex].south = maze[currentCellIndex].north 
-		    
-
-		###########################EAST ORIENTATION#########################################
-    elif direction == 'E':
-        if left == True:
-            maze[currentCellIndex].north = 'O'
-        else:
-            maze[currentCellIndex].north = 'W'
-        
-        if front == True:
-            maze[currentCellIndex].east = 'O'
-        else:
-            maze[currentCellIndex].east = 'W'
-        
-        if right == True:
-            maze[currentCellIndex].south = 'O'
-        else:
-            maze[currentCellIndex].south = 'W'
-		    
-		    
-        #if leftIndex >= 0:
-            #maze[leftIndex].east = maze[currentCellIndex].south
-			
-        #if upIndex >= 0:
-            #maze[upIndex].south = maze[currentCellIndex].west 
-		
-			###########################SOUTH ORIENTATION#########################################
-    elif direction == 'S':
-        if left == True:
-            maze[currentCellIndex].east = 'O'
-        else:
-            maze[currentCellIndex].east = 'W'
-        
-        if front == True:
-            maze[currentCellIndex].south = 'O'
-        else:
-            maze[currentCellIndex].south = 'W'
-        
-        if right == True:
-            maze[currentCellIndex].west = 'O'
-        else:
-            maze[currentCellIndex].west = 'W'
-		    
-		
-        #if leftIndex >= 0:
-            #maze[leftIndex].east = maze[currentCellIndex].east
-			
-        #if upIndex >= 0:
-            #maze[upIndex].south = maze[currentCellIndex].south
-            
-    if leftIndex >= 0:
-        maze[leftIndex].east = maze[currentCellIndex].west
-			
-    if upIndex >= 0:
-        maze[upIndex].south = maze[currentCellIndex].north 
-		
-
-def updateCell(direction, cell):
-    global currentCell
-	
-    if direction == 'W':
-        currentCell = cell - 1
-    elif direction == 'N':
-        currentCell = cell - 4
-    elif direction == 'E':
-        currentCell = cell + 1
-    elif direction == 'S':
-	    currentCell = cell + 4
+    pwm.set_pwm(LSERVO, 0, math.floor(1.6 / 20 * 4096))
+    pwm.set_pwm(RSERVO, 0, math.floor(1.4 / 20 * 4096))
 	
 
-		
 ## Attach the Ctrl+C signal interrupt
 signal.signal(signal.SIGINT, ctrlC)
 
@@ -761,17 +404,12 @@ desiredDistance = 5.0
 distanceTravel = 0
 
 # Declaring the kp value to be used
-kpValue = 0.7
+kpValue = 0.9
 
 # Sleeping the motors before starting the movement
 pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
 pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
-time.sleep(0.5)
-
-
-direction = input("Please enter the direction(orientation of the robot starting: ")
-currentCell = int(input("Please enter starting cell numbered from 1-16: "))
-
+time.sleep(3)
 
 # Waiting for user to enter the required key in order to start the movement
 flagStart = False
@@ -794,59 +432,35 @@ leftWallOpen = False
 rightWallOpen = False
 newCell = True
 
-# Initialize the maze with a set of walls and visited cells
-# The bottom right cell is marked as unvisited and with unknown walls
-maze = [
-	Cell('W','W','?','?', False), Cell('?','W','?','?', False), Cell('?','W','?','?', False), Cell('?','W','W','?', False),
-    Cell('W','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','W','?', False),
-	Cell('W','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','W','?', False),
-	Cell('W','?','?','W', False), Cell('?','?','?','W', False), Cell('?','?','?','W', False), Cell('?','?','W','W', False)
-]
-
-# How to modify a cell
-#maze[0].east = 'W'
-#maze[0].visited = False	
-
 while True:
-    #detectMazeInconsistencies(maze)
-    #printMaze(maze)
-    #updateMaze(True,True,False,'W', 6) 
-	
 	# Reading in from sensors
     fDistance = fSensor.get_distance()
     rDistance = rSensor.get_distance()
     lDistance = lSensor.get_distance()
     
     # Transforming readings to inches
-    inchesDFront = fDistance * 0.0393700787
-    inchesDRight = rDistance * 0.0393700787
-    inchesDLeft = lDistance * 0.0393700787
+    inchesDistanceFront = fDistance * 0.0393700787
+    inchesDistanceRight = rDistance * 0.0393700787
+    inchesDistanceLeft = lDistance * 0.0393700787
     
     #Constantly updates the flags while reading the sensors.
-    if inchesDFront > 15:
+    if inchesDistanceFront > 15:
         frontWallOpen = True
         
-    if inchesDRight > 15:
+    if inchesDistanceRight > 15:
         rightWallOpen = True
 
-    if inchesDLeft > 15:
+    if inchesDistanceLeft > 15:
         leftWallOpen = True
     
     #Checking if the robot has already traveled the required distance
     distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
     #print("Distance Traveled is: ", distanceTravel)
-    #print(newCell)
+    print(newCell)
     if distanceTravel > 9 and newCell:
         print("I have entered a new cell")
         newCell = False
-        
-        updateCell(direction, currentCell)
-        
     if distanceTravel > 18:
-        print("UPDATEING CELL: ", currentCell)
-        updateMaze(leftWallOpen, frontWallOpen, rightWallOpen, direction, currentCell)
-        print("I updated the maze!")
-        printMaze(maze)
         whatToDo(leftWallOpen, frontWallOpen, rightWallOpen)
         newCell = True
         
@@ -861,5 +475,3 @@ while True:
 	      	
     moveForward()
     
-   
-

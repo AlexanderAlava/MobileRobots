@@ -108,29 +108,15 @@ def printMaze(maze, hRes = 4, vRes = 2):
 # Initialize the maze with a set of walls and visited cells
 # The bottom right cell is marked as unvisited and with unknown walls
 maze = [
-	Cell('W','W','?','?', False), Cell('?','W','?','?', False), Cell('?','W','?','?', False), Cell('?','W','W','?', False),
-    Cell('W','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','W','?', False),
-	Cell('W','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','W','?', False),
-	Cell('W','?','?','W', False), Cell('?','?','?','W', False), Cell('?','?','?','W', False), Cell('?','?','W','W', False)
+	Cell('W','W','O','O', True), Cell('O','W','O','O', True), Cell('O','W','O','O', True), Cell('O','W','W','O', True),
+	Cell('W','O','W','O', True), Cell('W','O','W','W', True), Cell('W','O','W','O', True), Cell('W','O','W','O', True),
+	Cell('W','O','W','O', True), Cell('W','W','W','O', True), Cell('W','O','W','O', True), Cell('W','O','W','?', True),
+	Cell('W','O','O','W', True), Cell('O','O','O','W', True), Cell('O','O','?','W', True), Cell('?','?','W','W', False)
 ]	
 
-printMaze(maze)
-
-
 # How to modify a cell
-
-maze[9].east = 'O'
-maze[9].north = 'O'
-maze[9].west = 'O'
-maze[9].south = 'O'
-
-maze[12].east = 'O'
-maze[12].north = 'O'
-maze[12].west = 'O'
-maze[12].south = 'O'
+#maze[0].east = 'W'
 #maze[0].visited = False
 
+detectMazeInconsistencies(maze)
 printMaze(maze)
-
-#detectMazeInconsistencies(maze)
-#printMaze(maze)

@@ -351,7 +351,7 @@ def moveForward():
 
     # Calculating respective errors
     errorf = 5.0 - inchesDistanceFront
-    errorr = 7.0 - inchesDistanceRight
+    errorr = 7.0zz - inchesDistanceRight
     errorl = 7.0 - inchesDistanceLeft
 
     # Computing the control signals
@@ -364,26 +364,14 @@ def moveForward():
     newSignalr = saturationFunctionRight(controlSignalr)
     newSignall = saturationFunctionRight(controlSignall)
 
-    if errorr > 15.0 and errorl < 15.0:
-        setSpeedsvw(linearSpeed,0)
-    elif errorr > errorl and errorr < 15.0:
+
+    if errorr > errorl and errorl < 15.0:
+        # Setting speed of the robot, angular speed will be zero when moving straight
         setSpeedsvw(linearSpeed,-newSignalr)
-    elif errorr > errorl and error > 15.0:
+    elif errorr < errorl and errorr < 15.0:
         setSpeedsvw(linearSpeed,newSignall)
-    elif errorr < errorl and errorl < 15.0:
-        setSpeedsvw(linearSpeed,newSignall)
-    elif errorr < errorl and errorl > 15.0:
-        setSpeedsvw(linearSpeed,-newSignalr)
     else:
         setSpeedsvw(linearSpeed,0)
-
-   #if errorr > errorl and errorr < 15.0:
-        # Setting speed of the robot, angular speed will be zero when moving straight
-    #    setSpeedsvw(linearSpeed,-newSignalr)
-    #elif errorr < errorl and errorl < 15.0:
-     #   setSpeedsvw(linearSpeed,newSignall)
-    #else:
-     #   setSpeedsvw(linearSpeed,0)
 
     # Checking if there is an object approaching from the front
     if inchesDistanceFront < 5.0:
@@ -440,12 +428,12 @@ desiredDistance = 5.0
 distanceTravel = 0
 
 # Declaring the kp value to be used
-kpValue = 0.82
+kpValue = 0.9
 
 # Sleeping the motors before starting the movement
 pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
 pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
-time.sleep(0.5)
+time.sleep(3)
 
 # Waiting for user to enter the required key in order to start the movement
 flagStart = False
@@ -492,7 +480,7 @@ while True:
     #Checking if the robot has already traveled the required distance
     distanceTravel = (8.20 * ((lRevolutions + rRevolutions) / 2))
     #print("Distance Traveled is: ", distanceTravel)
-    #print(newCell)
+    print(newCell)
     if distanceTravel > 9 and newCell:
         print("I have entered a new cell")
         newCell = False
