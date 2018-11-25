@@ -450,7 +450,7 @@ def moveForward():
         # Checking if the front small reading happens continously to avoid a fake trigger
 	    if sensorCount > 4:
             # Turning left
-		    adjustFront()
+		    turnLeft()
 
     # Clearing sensor count for continous small front readings
     else:
@@ -753,8 +753,8 @@ def updateMaze(left, front, right, direction, currentCell):
     if leftIndex >= 0:
         maze[leftIndex].east = maze[currentCellIndex].west
 			
-    if upIndex >= 0:
-        maze[upIndex].south = maze[currentCellIndex].north 
+    #if upIndex >= 0:
+     #   maze[upIndex].south = maze[currentCellIndex].north 
         
 def updateCell(direction, cell):
     global currentCell
@@ -825,35 +825,9 @@ maze = [
 	Cell('W','?','?','W', False), Cell('?','?','?','W', False), Cell('?','?','?','W', False), Cell('?','?','W','W', False)
 ]
 
-
-
-
-####################################### UPDATING INFORMATION FROM INITIAL CELL ########################################################
-
-
-# Reading in from sensors
-fDistance = fSensor.get_distance()
-rDistance = rSensor.get_distance()
-lDistance = lSensor.get_distance()
-    
-# Transforming readings to inches
-inchesDFront = fDistance * 0.0393700787
-inchesDRight = rDistance * 0.0393700787
-inchesDLeft = lDistance * 0.0393700787
-    
-#Constantly updates the flags while reading the sensors.
-if inchesDFront > 15:
-    frontWallOpen = True
-        
-if inchesDRight > 15:
-    rightWallOpen = True
-
-if inchesDLeft > 15:
-    leftWallOpen = True
-
-updateMaze(leftWallOpen, frontWallOpen, rightWallOpen, direction, currentCell)
-
-#######################################################################################################################################
+# How to modify a cell
+#maze[0].east = 'W'
+#maze[0].visited = False	
 
 while True:
     #detectMazeInconsistencies(maze)
@@ -890,8 +864,7 @@ while True:
         updateCell(direction, currentCell)
         
     if distanceTravel > 18:
-        print("UPDATING CELL: ", currentCell)
-        print("\nCURRENT ORIENTATION: ", direction)
+        print("UPDATEING CELL: ", currentCell)
         updateMaze(leftWallOpen, frontWallOpen, rightWallOpen, direction, currentCell)
         print("I updated the maze!")
         printMaze(maze)
