@@ -497,7 +497,7 @@ def inPlaceTurnAround():
     stop()
     pwm.set_pwm(LSERVO, 0, math.floor(1.55 / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(1.55 / 20 * 4096))
-    time.sleep(1.9)
+    time.sleep(2.0)
     lRevolutions = 1.1
     rRevolutions = 1.1
 
