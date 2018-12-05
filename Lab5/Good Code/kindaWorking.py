@@ -295,12 +295,6 @@ def ctrlC(signum, frame):
         if startInput == "m":
             print("\nMAP OF MAZE:\n")
             printMaze(maze)
-            
-            print("\nYellow cell: ", yellowCell)
-            print("\nBlue cell: ", blueCell)
-            print("\nGreen cell: ", greenCell)
-            print("\nPink cell: ", pinkCell)
-            
             exit()
         else:
 	        exit()
@@ -1060,7 +1054,7 @@ def turnToOuterWall():
 
 
 def checkCamera():
-    global fps, prev, lRevolutions, rRevolutions, yellowCell, blueCell, greenCell, pinkCell
+    global fps, prev, lRevolutions, rRevolutions
     myCount = 0
     
     fDistance = fSensor.get_distance()
@@ -1140,25 +1134,16 @@ def checkCamera():
             print("x: ", x_position)
             print("y: ", y_position)
             print("size: ", circle_diameter)
-            
-            pinkCell = currentCell
-            
             print("I SEE PINK")
 
         for keypoint in keypoints_green:
             print("I SEE GREEN")
-            
-            greenCell = currentCell
 
         for keypoint in keypoints_yellow:
             print ("I SEE YELLOW")
-            
-            yellowCell = currentCell
 
         for keypoint in keypoints_blue:
             print("I SEE BLUE")
-            
-            blueCell = currentCell
 
     # Display the frame
         cv.imshow(WINDOW1, mask_pink)
@@ -1327,7 +1312,7 @@ def navigateToColor():
 
 
 def mainMenu():
-    global currentCell, direction, blueCell, yellowCell, pinkCell, greenCell
+    global currentCell, direction
 
     flagStart = False
     menuInput = input("\nPress select an option (1 - 4):\n\n(1) Change robot's current position and orientation.\n(2) Run the mapping algorithm.\n(3) Load built-in map.\n(4) Travel to specific color.\n\n Enter any other key to exit the program.\n")
@@ -1335,18 +1320,11 @@ def mainMenu():
         direction = input("Please enter the direction(orientation of the robot starting: ")
         currentCell = int(input("Please enter starting cell numbered from 1-16: "))
     elif menuInput == "2":
-        blueCell = -1
-        greenCell = -1
-        yellowCell = -1
-        pinkCell = -1
-        
         mapping()
     elif menuInput == "3":
         loadMap()
-        print("\nBuilt-in map has been built!")
     elif menuInput == "4":
-        print("\nWarning!\nPath planning functionality under construction!")
-        exit()
+        flagStart = True
     else:
     	print("Exiting program, re-run file wall following.")
     	exit()
