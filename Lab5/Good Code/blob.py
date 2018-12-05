@@ -16,6 +16,7 @@ import cv2 as cv
 import time
 from ThreadedWebcam import ThreadedWebcam
 from UnthreadedWebcam import UnthreadedWebcam
+import numpy as np
 
 FPS_SMOOTHING = 0.9
 
@@ -66,6 +67,7 @@ def onMaxVTrackbar(val):
     maxV = max(val, minV + 1)
     cv.setTrackbarPos("Max Val", WINDOW1, maxV)
 
+
 # Initialize the threaded camera
 # You can run the unthreaded camera instead by changing the line below.
 # Look for any differences in frame rate and latency.
@@ -103,6 +105,18 @@ cv.createTrackbar("Max Sat", WINDOW1, maxS, 255, onMaxSTrackbar)
 cv.createTrackbar("Min Val", WINDOW1, minV, 255, onMinVTrackbar)
 cv.createTrackbar("Max Val", WINDOW1, maxV, 255, onMaxVTrackbar)
 
+lower_pink = np.array([136, 139, 77])
+upper_pink = np.array([180, 255, 255])
+
+lower_green = np.array([35, 139, 77])
+upper_green = np.array([43, 255, 255])
+
+lower_yellow = np.array([24, 139, 78])
+upper_yellow = np.array([33, 255, 255])
+
+lower_blue = np.array([65, 0, 77])
+upper_blue = np.array([103, 255, 255])
+
 fps, prev = 0.0, 0.0
 while True:
     # Calculate FPS
@@ -118,36 +132,73 @@ while True:
     frame_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
     
     # Create a mask using the given HSV range
-    mask = cv.inRange(frame_hsv, (minH, minS, minV), (maxH, maxS, maxV))
+    #mask = cv.inRange(frame_hsv,(minH, minS, minV), (maxH, maxS, maxV))
+    mask_pink = cv.inRange(frame_hsv,lower_pink, upper_pink)
+    mask_green = cv.inRange(frame_hsv,lower_green, upper_green)
+    mask_yellow = cv.inRange(frame_hsv,lower_yellow, upper_yellow)
+    mask_blue = cv.inRange(frame_hsv, lower_blue, upper_blue)
     
     # Run the SimpleBlobDetector on the mask.
     # The results are stored in a vector of 'KeyPoint' objects,
     # which describe the location and size of the blobs.
-    keypoints = detector.detect(mask)
+    #keypoints = detector.detect(mask)
+    keypoints_pink = detector.detect(mask_pink)
+    keypoints_green = detector.detect(mask_green)
+    keypoints_yellow = detector.detect(mask_yellow)
+    keypoints_blue = detector.detect(mask_blue)
+    
     
     # For each detected blob, draw a circle on the frame
-    frame_with_keypoints = cv.drawKeypoints(frame, keypoints, None, color = (0, 255, 0), flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    #frame_with_keypoints = cv.drawKeypoints(frame, keypoints, None, color = (0, 255, 0), flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    frame_with_keypoints_pink = cv.drawKeypoints(frame, keypoints_pink, None, color = (0, 255, 0), flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    frame_with_keypoints_green = cv.drawKeypoints(frame, keypoints_green, None, color = (0, 255, 0), flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    frame_with_keypoints_yellow = cv.drawKeypoints(frame, keypoints_yellow, None, color = (0, 255, 0), flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    frame_with_keypoints_blue = cv.drawKeypoints(frame, keypoints_blue, None, color = (0, 255, 0), flags = cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS) 
+    
     
     # Write text onto the frame
-    cv.putText(frame_with_keypoints, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-    cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    #cv.putText(frame_with_keypoints, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    #cv.putText(frame_with_keypoints, "{} blobs".format(len(keypoints)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    cv.putText(frame_with_keypoints_pink, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    cv.putText(frame_with_keypoints_pink, "{} blobs".format(len(keypoints_pink)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    
+    cv.putText(frame_with_keypoints_green, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    cv.putText(frame_with_keypoints_green, "{} blobs".format(len(keypoints_green)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    
+    cv.putText(frame_with_keypoints_yellow, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    cv.putText(frame_with_keypoints_yellow, "{} blobs".format(len(keypoints_yellow)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    
+    cv.putText(frame_with_keypoints_blue, "FPS: {:.1f}".format(fps), (5, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    cv.putText(frame_with_keypoints_blue, "{} blobs".format(len(keypoints_blue)), (5, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+    
+    
     
     #Print FPS on screen and number of blobs.
-    print("Camera FPS: ", fps)
-    print("Number of blobs detected: ", len(keypoints))
-    for keypoint in keypoints:
-        x_position = keypoint.pt[0]
-        y_position = keypoint.pt[1]
-        circle_diameter = keypoint.size # diameter of circle
-        keypoint_angle = keypoint.angle # angle 
+    #print("Camera FPS: ", fps)
+    #print("Number of blobs detected: ", len(keypoints))
+    for keypoint in keypoints_pink:
+        #x_position = keypoint.pt[0]
+        #y_position = keypoint.pt[1]
+        #circle_diameter = keypoint.size # diameter of circle
+        #keypoint_angle = keypoint.angle # angle 
         
-        print("x: ", x_position)
-        print("y: ", y_position)
-        print("size: ", circle_diameter)	 
+        #print("x: ", x_position)
+        #print("y: ", y_position)
+        #print("size: ", circle_diameter)
+        print("I SEE PINK")	 
     
+    for keypoint in keypoints_green:
+        print("I SEE GREEN")
+		
+    for keypoint in keypoints_yellow:
+        print ("I SEE YELLOW")
+		
+    for keypoint in keypoints_blue:
+        print("I SEE BLUE")
+		
     # Display the frame
-    cv.imshow(WINDOW1, mask)
-    cv.imshow(WINDOW2, frame_with_keypoints)
+    cv.imshow(WINDOW1, mask_yellow)
+    cv.imshow(WINDOW2, frame_with_keypoints_yellow)
     
     # Check for user input
     c = cv.waitKey(1)
