@@ -771,6 +771,8 @@ def updateCell(direction, cell):
 
 
 def mapping():
+    global sensorCount, frontWallOpen, leftWallOpen, rightWallOpen, newCell, inchesDFront, inchesDLeft, inchesDRight, direction, currentCell
+	
     # Sleeping the motors before starting the movement
     pwm.set_pwm(LSERVO, 0, math.floor(1.5 / 20 * 4096))
     pwm.set_pwm(RSERVO, 0, math.floor(1.5 / 20 * 4096))
@@ -791,7 +793,7 @@ def mapping():
     	exit()
 
     # Declaring constant linear speed that will be used during the movement
-    linearSpeed = 5
+    #linearSpeed = 5
 
     # Declaring a variable to keep track of front sensor big readings
     sensorCount = 0
@@ -804,12 +806,12 @@ def mapping():
 
     # Initialize the maze with a set of walls and visited cells
     # The bottom right cell is marked as unvisited and with unknown walls
-    maze = [
-    	Cell('W','W','?','?', False), Cell('?','W','?','?', False), Cell('?','W','?','?', False), Cell('?','W','W','?', False),
-        Cell('W','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','W','?', False),
-    	Cell('W','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','W','?', False),
-    	Cell('W','?','?','W', False), Cell('?','?','?','W', False), Cell('?','?','?','W', False), Cell('?','?','W','W', False)
-    ]
+    #maze = [
+    	#Cell('W','W','?','?', False), Cell('?','W','?','?', False), Cell('?','W','?','?', False), Cell('?','W','W','?', False),
+        #Cell('W','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','W','?', False),
+    	#Cell('W','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','W','?', False),
+    	#Cell('W','?','?','W', False), Cell('?','?','?','W', False), Cell('?','?','?','W', False), Cell('?','?','W','W', False)
+    #]
 
 
 
@@ -949,4 +951,16 @@ distanceTravel = 0
 # Declaring the kp value to be used
 kpValue = 0.7
 
-mapping()
+sensorCount = 0
+
+linearSpeed = 5
+
+maze = [
+    	Cell('W','W','?','?', False), Cell('?','W','?','?', False), Cell('?','W','?','?', False), Cell('?','W','W','?', False),
+        Cell('W','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','W','?', False),
+    	Cell('W','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','?','?', False), Cell('?','?','W','?', False),
+    	Cell('W','?','?','W', False), Cell('?','?','?','W', False), Cell('?','?','?','W', False), Cell('?','?','W','W', False)
+    ]
+
+#mapping()
+mainMenu()

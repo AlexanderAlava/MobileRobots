@@ -111,8 +111,8 @@ upper_pink = np.array([180, 255, 255])
 lower_green = np.array([35, 139, 77])
 upper_green = np.array([43, 255, 255])
 
-lower_yellow = np.array([24, 139, 78])
-upper_yellow = np.array([33, 255, 255])
+lower_yellow = np.array([24, 137, 78])
+upper_yellow = np.array([28, 255, 255])
 
 lower_blue = np.array([65, 0, 77])
 upper_blue = np.array([103, 255, 255])
@@ -135,7 +135,7 @@ while True:
     #mask = cv.inRange(frame_hsv,(minH, minS, minV), (maxH, maxS, maxV))
     mask_pink = cv.inRange(frame_hsv,lower_pink, upper_pink)
     mask_green = cv.inRange(frame_hsv,lower_green, upper_green)
-    mask_yellow = cv.inRange(frame_hsv,lower_yellow, upper_yellow)
+    mask_yellow = cv.inRange(frame_hsv, (minH, minS, minV), (maxH, maxS, maxV))
     mask_blue = cv.inRange(frame_hsv, lower_blue, upper_blue)
     
     # Run the SimpleBlobDetector on the mask.
